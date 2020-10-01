@@ -1,0 +1,31 @@
+# проверить, поддерживает ли host аппаратную виртуализацию
+cat /proc/cpuinfo | grep -E '(vmx|svm)' -m 1
+
+# ubuntu
+sudo apt install qemu-kvm libvirt-bin virt-manager ovmf -y
+
+# нужно добавить пользователя в особую группу
+cat /etc/group | grep libvirt
+sudo adduser black libvirt
+
+# команда virsh, перейти в виртуал шелл
+virsh
+    help
+
+    # настройки сети
+    # все активные сетевые адаптеры, которые настроены
+    net-list
+
+    # расширенный список
+    net-list --all
+
+    quit
+
+# посмотреть сетевые интерфейсы
+ip a
+
+# таблица iptables
+sudo iptables -vnL
+
+virsh
+    net-list --all
