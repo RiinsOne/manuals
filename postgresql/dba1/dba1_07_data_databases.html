@@ -1,0 +1,721 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF8">
+<style>
+p.c    { }
+h1     { font-size: 160%; font-weight: bold; padding-top: 1ex; padding-bottom: 1ex; }
+div.s1 { margin-left: 20px; padding-left: 10px; font-weight: bold; }
+div.s2 { margin-left: 80px; padding-left: 10px; font-weight: bold; }
+div.s3 { margin-left: 140px; padding-left: 10px; font-weight: bold; }
+div.r1 { margin-left: 20px; padding-left: 10px; }
+div.r2 { margin-left: 80px; padding-left: 10px; }
+div.r3 { margin-left: 140px; padding-left: 10px; }
+div.e  { margin-left: 20px; padding-left: 10px; font-weight: bold; <!--color: darkblue;--> }
+div.r  { margin-left: 20px; padding-left: 10px; <!--color: darkblue;--> }
+</style>
+</head>
+<body>
+<h1>
+Базы данных
+</h1>
+<p class="C">
+Посмотрим список имеющихся баз:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#00a150">psql</span> <span style="color:#323232">-</span>l
+</pre>
+</div>
+<div class="R"><pre class="R">
+                                  List of databases
+   Name    |  Owner   | Encoding |   Collate   |    Ctype    |   Access privileges   
+-----------+----------+----------+-------------+-------------+-----------------------
+ postgres  | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+ template0 | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres          +
+           |          |          |             |             | postgres=CTc/postgres
+ template1 | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres          +
+           |          |          |             |             | postgres=CTc/postgres
+(3 rows)
+</pre></div>
+<p class="C">
+Пока нас интересует только название, значение остальных полей рассмотрим позже.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Также можно посмотреть в самой базе данных:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> datname<span style="color:#323232">,</span> datistemplate<span style="color:#323232">,</span> datallowconn<span style="color:#323232">,</span> datconnlimit <span style="color:#3b6ac8">FROM</span> pg_database<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+  datname  | datistemplate | datallowconn | datconnlimit 
+-----------+---------------+--------------+--------------
+ postgres  | f             | t            |           -1
+ template1 | t             | t            |           -1
+ template0 | t             | f            |           -1
+(3 rows)
+
+</pre></div>
+<ul class="U">
+<li>datistemplate - является ли база данных шаблоном;</li>
+<li>datallowconn  - разрешены ли соединения с базой данных,</li>
+<li>datconnlimit  - максимальное количество соединений (-1 = без ограничений).</li>
+</ul>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Создание БД из шаблона
+</h1>
+<p class="C">
+Подключимся к шаблонной базе template1.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> template1
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;template1&quot; as user &quot;postgres&quot;.
+</pre></div>
+<p class="C">
+Проверим, доступна ли функция digest, вычисляющая хеш-код текстовой строки.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">digest</span><span style="color:#323232">(</span><span style="color:#1094a0">'Hello, world!'</span><span style="color:#323232">,</span> <span style="color:#1094a0">'md5'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ERROR:  function digest(unknown, unknown) does not exist
+LINE 1: SELECT digest('Hello, world!', 'md5');
+               ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+</pre></div>
+<p class="C">
+Такой функции нет.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+На самом деле digest определена в пакете pgcrypto. Установим его:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE EXTENSION</span> pgcrypto<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE EXTENSION
+</pre></div>
+<p class="C">
+Если бы расширение pgcrypto не было установлено с помощью make install,
+мы получили бы ошибку "ERROR: could not open extension control file..."
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Теперь нам доступны функции, входящие в расширение pgcrypto. Например,
+можно вычислить MD5-дайджест:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">digest</span><span style="color:#323232">(</span><span style="color:#1094a0">'Hello, world!'</span><span style="color:#323232">,</span> <span style="color:#1094a0">'md5'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+               digest               
+------------------------------------
+ \x6cd3556deb0da54bca060b4c39479839
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Чтобы шаблон можно было использовать для создания базы, к нему не должно
+быть активных подключений, поэтому отключимся от базы template1.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> postgres
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;postgres&quot; as user &quot;postgres&quot;.
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Для создания новой базы данных служит команда CREATE DATABASE:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE DATABASE</span> db<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE DATABASE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> db
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;db&quot; as user &quot;postgres&quot;.
+</pre></div>
+<p class="C">
+Альтернативно можно было бы воспользоваться утилитой createdb.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> datname<span style="color:#323232">,</span> datistemplate<span style="color:#323232">,</span> datallowconn<span style="color:#323232">,</span> datconnlimit <span style="color:#3b6ac8">FROM</span> pg_database<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+  datname  | datistemplate | datallowconn | datconnlimit 
+-----------+---------------+--------------+--------------
+ postgres  | f             | t            |           -1
+ template1 | t             | t            |           -1
+ template0 | t             | f            |           -1
+ db        | f             | t            |           -1
+(4 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Поскольку для создания по умолчанию используется шаблон template1, в ней
+также будет доступны функции пакета pgcrypto:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">digest</span><span style="color:#323232">(</span><span style="color:#1094a0">'Hello, world!'</span><span style="color:#323232">,</span> <span style="color:#1094a0">'md5'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+               digest               
+------------------------------------
+ \x6cd3556deb0da54bca060b4c39479839
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Управление базами данных
+</h1>
+<p class="C">
+Созданную базу данных можно переименовать (к ней не должно быть подключений):
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> postgres
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;postgres&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER DATABASE</span> db <span style="color:#3b6ac8">RENAME TO</span> appdb<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER DATABASE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> datname<span style="color:#323232">,</span> datistemplate<span style="color:#323232">,</span> datallowconn<span style="color:#323232">,</span> datconnlimit <span style="color:#3b6ac8">FROM</span> pg_database<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+  datname  | datistemplate | datallowconn | datconnlimit 
+-----------+---------------+--------------+--------------
+ postgres  | f             | t            |           -1
+ template1 | t             | t            |           -1
+ template0 | t             | f            |           -1
+ appdb     | f             | t            |           -1
+(4 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Можно изменить и другие параметры, например:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER DATABASE</span> appdb <span style="color:#3b6ac8">CONNECTION LIMIT</span> <span style="color:#1094a0">10</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER DATABASE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> datname<span style="color:#323232">,</span> datistemplate<span style="color:#323232">,</span> datallowconn<span style="color:#323232">,</span> datconnlimit <span style="color:#3b6ac8">FROM</span> pg_database<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+  datname  | datistemplate | datallowconn | datconnlimit 
+-----------+---------------+--------------+--------------
+ postgres  | f             | t            |           -1
+ template1 | t             | t            |           -1
+ template0 | t             | f            |           -1
+ appdb     | f             | t            |           10
+(4 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Размер базы данных
+</h1>
+<p class="C">
+Размер базы данных можно узнать с помощью функции:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">pg_database_size</span><span style="color:#323232">(</span><span style="color:#1094a0">'appdb'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ pg_database_size 
+------------------
+          7222887
+(1 row)
+
+</pre></div>
+<p class="C">
+Чтобы не считать разряды, можно вывести размер в читаемом виде:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">pg_size_pretty</span><span style="color:#323232">(</span><span style="color:#c73a69">pg_database_size</span><span style="color:#323232">(</span><span style="color:#1094a0">'appdb'</span><span style="color:#323232">));</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ pg_size_pretty 
+----------------
+ 7054 kB
+(1 row)
+
+</pre></div>
+<p class="C">
+В этой базе данных еще нет пользовательских объектов (кроме расширения
+pgcrypto); фактически, это размер "пустой" базы.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Схемы
+</h1>
+<p class="C">
+Список схем можно узнать командой psql (dn = describe namespace):
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\dn</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+  List of schemas
+  Name  |  Owner   
+--------+----------
+ public | postgres
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Создадим новую схему:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> appdb
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;appdb&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE SCHEMA</span> app<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE SCHEMA
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\dn</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+  List of schemas
+  Name  |  Owner   
+--------+----------
+ app    | postgres
+ public | postgres
+(2 rows)
+
+</pre></div>
+<p class="C">
+Если теперь создать таблицу (и не указать имя схемы), в какую схему она
+попадет?
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Надо посмотреть на путь поиска.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SHOW</span> search_path<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+   search_path   
+-----------------
+ &quot;$user&quot;, public
+(1 row)
+
+</pre></div>
+<p class="C">
+Конструкция "$user" обозначает схему с тем же именем, что и имя текущего
+пользователя (в нашем случае - postgres). Поскольку такой схемы нет, она
+игнорируется.
+</p>
+<p class="C">
+Чтобы не думать над тем, какие схемы есть, каких нет, и какие не указаны явно,
+можно воспользоваться функцией:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">current_schemas</span><span style="color:#323232">(</span><span style="color:#3b6ac8">true</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+   current_schemas   
+---------------------
+ {pg_catalog,public}
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Теперь создадим таблицу:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE TABLE</span> <span style="color:#c73a69">t</span><span style="color:#323232">(</span>s <span style="color:#a00050">text</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE TABLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> t <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">'Я - таблица t'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+INSERT 0 1
+</pre></div>
+<p class="C">
+Список таблиц можно получить командой \dt:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\dt</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+        List of relations
+ Schema | Name | Type  |  Owner   
+--------+------+-------+----------
+ public | t    | table | postgres
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Объект можно перемещать между схемами. Поскольку речь идет о логической
+организации, перемещение происходит только в системном каталоге; сами данные
+физически остаются на месте.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER TABLE</span> t <span style="color:#3b6ac8">SET SCHEMA</span> app<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER TABLE
+</pre></div>
+<p class="C">
+Теперь к таблице t можно обращаться с явным указанием схемы:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> app.t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+       s       
+---------------
+ &#1071; - &#1090;&#1072;&#1073;&#1083;&#1080;&#1094;&#1072; t
+(1 row)
+
+</pre></div>
+<p class="C">
+Но если опустить имя схемы, таблица не будет найдена:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ERROR:  relation &quot;t&quot; does not exist
+LINE 1: SELECT * FROM t;
+                      ^
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Путь поиска
+</h1>
+<p class="C">
+Установим путь поиска, например, так:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SET</span> search_path <span style="color:#323232">=</span> public<span style="color:#323232">,</span> app<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+SET
+</pre></div>
+<p class="C">
+Теперь таблица будет найдена.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+       s       
+---------------
+ &#1071; - &#1090;&#1072;&#1073;&#1083;&#1080;&#1094;&#1072; t
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Здесь мы установили конфигурационный параметр на уровне сеанса (при
+переподключении значение пропадет). Устанавливать такое значение на уровне
+всего кластера тоже не правильно - возможно, этот путь нужен не всегда и
+не всем.
+</p>
+<p class="C">
+Но параметр можно установить и на уровне отдельной базы данных:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER DATABASE</span> appdb <span style="color:#3b6ac8">SET</span> search_path <span style="color:#323232">=</span> public<span style="color:#323232">,</span> app<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER DATABASE
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Теперь он будет устанавливаться для всех новых подключений к БД
+appdb. Проверим:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> appdb
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;appdb&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SHOW</span> search_path<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ search_path 
+-------------
+ public, app
+(1 row)
+
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">current_schemas</span><span style="color:#323232">(</span><span style="color:#3b6ac8">true</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+     current_schemas     
+-------------------------
+ {pg_catalog,public,app}
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Временные таблицы и pg_temp
+</h1>
+<p class="C">
+Создадим временную таблицу:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE TEMP TABLE</span> <span style="color:#c73a69">t</span><span style="color:#323232">(</span>s <span style="color:#a00050">text</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE TABLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\dt</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+          List of relations
+  Schema   | Name | Type  |  Owner   
+-----------+------+-------+----------
+ pg_temp_3 | t    | table | postgres
+(1 row)
+
+</pre></div>
+<p class="C">
+Таблица создана в специальной схеме. Каждому сеансу выделяется отдельная
+"временная" схема, так что он может видеть только свои собственные временные
+таблицы.
+</p>
+<p class="C">
+Но куда пропала обычная таблица t?
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Ответ дает развернутый путь поиска: в него теперь подставлена временная схема,
+и объект в ней "перекрывает" одноименный объект схемы app.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">current_schemas</span><span style="color:#323232">(</span><span style="color:#3b6ac8">true</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+          current_schemas          
+-----------------------------------
+ {pg_temp_3,pg_catalog,public,app}
+(1 row)
+
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> t <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">'Я - временная таблица'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+INSERT 0 1
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Тем не менее, к каждой из таблиц можно обращаться с явным указанием схемы. Для
+временной таблицы надо использовать псевдосхему pg_temp - она автоматически
+отображается в нужную схему pg_temp_N:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> app.t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+       s       
+---------------
+ &#1071; - &#1090;&#1072;&#1073;&#1083;&#1080;&#1094;&#1072; t
+(1 row)
+
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_temp.t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+           s           
+-----------------------
+ &#1071; - &#1074;&#1088;&#1077;&#1084;&#1077;&#1085;&#1085;&#1072;&#1103; &#1090;&#1072;&#1073;&#1083;&#1080;&#1094;&#1072;
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+В принципе, во временной схеме можно создавать не только таблицы.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE VIEW</span> v <span style="color:#3b6ac8">AS SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_temp.t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+NOTICE:  view &quot;v&quot; will be a temporary view
+CREATE VIEW
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Временные таблицы и данные в них могут иметь различные сроки жизни (в
+зависимости от указания ON COMMIT DELETE/PRESERVE/DROP). В любом случае при
+переподключении все объекты во временной схеме уничтожаются:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> appdb
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;appdb&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">current_schemas</span><span style="color:#323232">(</span><span style="color:#3b6ac8">true</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+     current_schemas     
+-------------------------
+ {pg_catalog,public,app}
+(1 row)
+
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_temp.v<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ERROR:  relation &quot;pg_temp.v&quot; does not exist
+LINE 1: SELECT * FROM pg_temp.v;
+                      ^
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_temp.t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ERROR:  relation &quot;pg_temp.t&quot; does not exist
+LINE 1: SELECT * FROM pg_temp.t;
+                      ^
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Удаление объектов
+</h1>
+<p class="C">
+Схему нельзя удалить, если в ней находятся какие-либо объекты:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">DROP SCHEMA</span> app<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ERROR:  cannot drop schema app because other objects depend on it
+DETAIL:  table t depends on schema app
+HINT:  Use DROP ... CASCADE to drop the dependent objects too.
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Но можно удалить схему вместе со всеми ее объектами:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">DROP SCHEMA</span> app <span style="color:#3b6ac8">CASCADE</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+NOTICE:  drop cascades to table t
+DROP SCHEMA
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Базу данных можно удалить, если к ней нет активных подключений.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\conninfo</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are connected to database &quot;appdb&quot; as user &quot;postgres&quot; via socket in &quot;/tmp&quot; at port &quot;5432&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> postgres
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;postgres&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">DROP DATABASE</span> appdb<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+DROP DATABASE
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Конец демонстрации.
+</p>
+</body>
+</html>

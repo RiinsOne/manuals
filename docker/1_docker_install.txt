@@ -1,0 +1,27 @@
+# установка docker на win 10
+# скачиваем последнюю версию toolbox
+https://github.com/docker/toolbox/releases
+
+# полная инструкция по установке
+https://docs.docker.com/toolbox/toolbox_install_windows/
+
+# устанавливаем DockerToolbox, далее запускаем Docker Quickstart Terminal на рабочем столе.
+
+# проверка установки
+$ docker run hello-world
+
+# получить образ убунту и зайди внутрь контейнера
+$ docker run -it ubuntu bash
+the input device is not a TTY.  If you are using mintty, try prefixing the command with 'winpty'
+# пробуем используя winpty
+$ winpty docker run -it ubuntu bash
+
+root@9c883f9dd2d0:~# uname -a
+Linux 9c883f9dd2d0 4.14.154-boot2docker #1 SMP Thu Nov 14 19:19:08 UTC 2019 x86_64 x86_64 x86_64 GNU/
+Linux
+
+# для выхода из контейнера
+exit
+
+# проверить установлен ли docker-compose
+$ docker-compose

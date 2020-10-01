@@ -1,0 +1,109 @@
+# для ubuntu
+# добавить пользователя в группу docker, который получит рут права
+sudo usermod -aG docker black
+sudo service docker restart
+
+# флаги -it -> создать сеанс интерактивной работы на подключаемом терминальном устройстве
+# команда bash - инициализирует командную оболочку bash
+winpty docker run -it ubuntu bash
+
+# при выходе - контейнер прекратит работу
+exit
+
+# вывод всех контейнеров, включая остановленные
+docker ps -a
+
+# запустить контейнер
+docker start <container name>
+$ docker start heuristic_bose
+$ docker ps
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+13038aafbd99        ubuntu              "bash"              4 minutes ago       Up 4 seconds                            heuristic_bose
+
+# остановить контейнер
+docker stop <container name>
+
+# инициалиризуем новый контейнер и зададим имя хоста
+docker run -h black -it ubuntu bash
+root@black:/#
+
+# docker присваивает контейнерам удобные имена
+# больше информации о контейнере
+docker inspect <container name>
+
+# можно фильтровать
+$ docker inspect nervous_nash | grep IPAddress
+            "SecondaryIPAddresses": null,
+            "IPAddress": "172.17.0.2",
+                    "IPAddress": "172.17.0.2",
+
+
+# задать своё имя контейнеру
+$ winpty docker run --name UbuntuName -h black -it ubuntu bash
+root@black:/#
+
+# увидеть список измененных файлов в контейнере
+docker diff UbuntuName
+
+#
+root@black:/home# touch test.txt
+#
+$ docker diff UbuntuName1
+C /home
+A /home/test.txt
+
+# список всех событий (логи) внутри контейнера
+docker logs UbuntuName1
+
+# удалить контейнер, но сначала надо выйти или остановить контейнер
+docker rm <container name>
+
+# можно удалять два сразу
+$ docker rm UbuntuName UbuntuName1
+UbuntuName
+UbuntuName1
+
+# вывести id остановленных контейнеров
+docker ps -aq -f status=exited
+
+# удалить все остановленные контейнеры
+docker rm -v $(docker ps -aq -f status=exited)
+
+# ищем докер образы
+https://hub.docker.com/
+
+# флаг -d -> запустить в фоновом режиме.
+# для примера - https://hub.docker.com/r/bitnami/apache
+docker run -d bitnami/apache
+
+$ docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                NAMES
+5090336e58d1        bitnami/apache      "/entrypoint.sh /run…"   About a minute ago   Up About a minute   8080/tcp, 8443/tcp   gifted_jang
+
+#
+# проброска портов
+#
+
+#
+$ docker stop gifted_jang
+gifted_jang
+
+# запускаем с пробросом с флагом -p -> первый порт на хост машине, второй порт в контейнере
+$ docker run -d -p 8000:8080 bitnami/apache
+bdab3dbd0b095e72fca2af64336a632b6a6b9d8f75d93349e09113756156930d
+# на win машине нужно узнать ip локалхоста машины присвоенный от адаптера виртуалбокс
+$ docker-machine ip
+192.168.99.100
+# и проверить в браузере
+http://192.168.99.100:8000/
+
+
+$ docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                              NAMES
+bdab3dbd0b09        bitnami/apache      "/entrypoint.sh /run…"   About a minute ago   Up About a minute   8443/tcp, 0.0.0.0:8000->8080/tcp   affectionate_tesla
+
+# список образов, не путать с контейнерами
+docker images
+
+# войти в баш контейнера
+docker exec -it [container-id] bash

@@ -1,0 +1,12 @@
+﻿orkhangasanov@ms-f1-micro:~/scripts$ ./start_og_sftpsita_bk.sh 
+cd: Fatal error: Host key verification failed.
+mget: 15229APR19CKP.XML.gz.enc: Fatal error: Host key verification failed.
+mv: cannot stat '/home/black/sftpscripts/15229APR19CKP.XML.gz.enc': No such file or directory
+/home/orkhangasanov/sitadata/15229APR19CKP.XML.gz.enc: No such file or directory
+
+
+что делать:
+ssh sftp://domodedova:Hew3wruf@57.250.192.37
+далее на все соглашаемся, жмем enter, но пароль вводить не обязательно, просто выходим через ctrl-c
+
+потом снова входит по lftp

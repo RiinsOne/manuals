@@ -1,0 +1,228 @@
+# create project
+django-admin startproject blog_engine
+
+# create application
+python manage.py startapp blog
+
+# run sever, by default port is 8000
+./manage.py runserver 5000
+
+# apply migrations - when start a new project
+./manage.py migrate
+
+# create migrations files of a new model in database
+./manage.py makemigrations
+  ||
+# after need make migrate
+./manage.py migrate
+
+# join django console
+./manage.py shell
+
+# inside django shell, create a new post -testing
+>>> from blog.models import Post
+>>> p = Post(title='New post', slug='new-slug', body='new post body')
+>>> p
+<Post: New post>
+>>> p.id
+>>> p.title
+'New post'
+>>> p.save()
+>>> p.id
+1
+>>>
+
+# with Post.objects.create - no need to use method p1.save()
+>>> p1 = Post.objects.create(title='new post2', slug='new-post2', body='body2')
+>>> p1
+<Post: new post2>
+>>> p1.id
+2
+>>>
+
+# django lookups
+# to see all Posts
+>>> Post.objects.all()
+<QuerySet [<Post: New post>, <Post: new post2>]>
+>>>
+
+# method get
+>>> post = Post.objects.get(slug='new-slug')
+>>> post
+<Post: New post>
+>>>
+
+# to find in whatever upper or lower case
+>>> post = Post.objects.get(slug__iexact='New-slug')
+>>> post
+<Post: New post>
+
+# method filter
+>>> post = Post.objects.filter(slug__contains='new')
+>>> post
+<QuerySet [<Post: New post>, <Post: new post2>]>
+>>>
+
+# get information of all posts
+>>> Post.objects.values()
+<QuerySet [{'id': 1, 'title': 'New post', 'slug': 'new-slug', 'body': 'new post body', 'date_pub': datetime.datetime(2019, 12, 22, 16, 25, 20, 107705, tzinfo=<UTC>)}, {'id': 2, 'title': 'new post2', 'slug': 'new-post2', 'body': 'body2', 'date_pub': datetime.datetime(2019, 12, 22, 16, 27, 7, 642668, tzinfo=<UTC>)}, {'id': 3, 'title': 'new post3', 'slug': 'new-post3', 'body': 'body3', 'date_pub': datetime.datetime(2019, 12, 22, 16, 35, 46, 580653, tzinfo=<UTC>)}, {'id': 4, 'title': 'new post4', 'slug': 'new-post4', 'body': 'body4', 'date_pub': datetime.datetime(2019, 12, 22, 16, 36, 9, 480800, tzinfo=<UTC>)}, {'id': 5, 'title': 'new post5', 'slug': 'new-post5', 'body': 'body5', 'date_pub': datetime.datetime(2019, 12, 22, 16, 36, 19, 845665, tzinfo=<UTC>)}]>
+>>>
+
+# create tag
+>>> from blog.models import *
+>>> django_t = Tag.objects.create(title='django', slug='django')
+>>> django_t
+<Tag: django>
+>>>
+
+# change any attribute
+>>> post = Post.objects.get(slug='new-slug')
+>>> post
+<Post: New post>
+>>> post.slug
+'new-slug'
+>>> post.slug = 'new-post'
+>>> post.save()
+>>>
+
+# add tag to post
+>>> post.tags
+<django.db.models.fields.related_descriptors.create_forward_many_to_many_manager.<locals>.ManyRelatedManager object at 0x7fddf1a2ec18>
+>>> post.tags.add(django_t)
+>>> post.tags.all()
+<QuerySet [<Tag: django>]>
+>>> django_t.posts.all()
+<QuerySet [<Post: New post>]>
+>>>
+
+# some testing
+>>> p1 = Post.objects.get(slug='new-post')
+>>> p1
+<Post: New post>
+>>> from blog.models import *
+>>> p1
+<Post: New post>
+>>> p1.tags.all()
+<QuerySet [<Tag: django>]>
+>>> t1 = Tag.objects.get(slug='django')
+>>> t1
+<Tag: django>
+>>> t1.posts.all()
+<QuerySet [<Post: New post>]>
+>>>
+
+# forms
+>>> from blog.forms import TagForm
+>>> tf = TagForm()
+>>> tf
+<TagForm bound=False, valid=Unknown, fields=(title;slug)>
+>>> dir(tf)
+['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__gt__', '__hash__', '__html__', '__init__', '__init_subclass__', '__iter__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_bound_fields_cache', '_clean_fields', '_clean_form', '_errors', '_html_output', '_post_clean', 'add_error', 'add_initial_prefix', 'add_prefix', 'as_p', 'as_table', 'as_ul', 'auto_id', 'base_fields', 'changed_data', 'clean', 'data', 'declared_fields', 'default_renderer', 'empty_permitted', 'error_class', 'errors', 'field_order', 'fields', 'files', 'full_clean', 'get_initial_for_field', 'has_changed', 'has_error', 'hidden_fields', 'initial', 'is_bound', 'is_multipart', 'is_valid', 'label_suffix', 'media', 'non_field_errors', 'order_fields', 'prefix', 'renderer', 'use_required_attribute', 'visible_fields']
+>>> tf.is_bound
+False
+>>> tf.is_valid
+<bound method BaseForm.is_valid of <TagForm bound=False, valid=Unknown, fields=(title;slug)>>
+>>> tf.is_valid()
+False
+>>> tf.errors
+{}
+>>> d = {'title': '', 'slug': ''}
+>>> d
+{'title': '', 'slug': ''}
+>>> tf = TagForm(d)
+>>> tf
+<TagForm bound=True, valid=Unknown, fields=(title;slug)>
+>>> tf.is_bound
+True
+>>> tf.is_valid()
+False
+>>> tf.errors
+{'title': ['This field is required.'], 'slug': ['This field is required.']}
+>>> dir(tf)
+['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__gt__', '__hash__', '__html__', '__init__', '__init_subclass__', '__iter__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_bound_fields_cache', '_clean_fields', '_clean_form', '_errors', '_html_output', '_post_clean', 'add_error', 'add_initial_prefix', 'add_prefix', 'as_p', 'as_table', 'as_ul', 'auto_id', 'base_fields', 'changed_data', 'clean', 'cleaned_data', 'data', 'declared_fields', 'default_renderer', 'empty_permitted', 'error_class', 'errors', 'field_order', 'fields', 'files', 'full_clean', 'get_initial_for_field', 'has_changed', 'has_error', 'hidden_fields', 'initial', 'is_bound', 'is_multipart', 'is_valid', 'label_suffix', 'media', 'non_field_errors', 'order_fields', 'prefix', 'renderer', 'use_required_attribute', 'visible_fields']
+>>> tf.cleaned_data
+{}
+>>> d = {'title': 'some-title10', 'slug': 'some-title10'}
+>>> tf = TagForm(d)
+>>> tf
+<TagForm bound=True, valid=Unknown, fields=(title;slug)>
+>>> tf.is_valid()
+True
+>>> tf.errors
+{}
+>>> tf.cleaned_data
+{'title': 'some-title10', 'slug': 'some-title10'}
+>>> from blog.models import Tag
+>>> tag = Tag(title=tf.cleaned_data['title'], slug=tf.cleaned_data['slug'])
+>>> tag
+<Tag: some-title10>
+>>> tag.save()
+>>> tag.id
+2
+>>>
+
+# testing TagForm
+>>> from blog.forms import TagForm
+>>> d = {'title': 'framework', 'slug': 'framework'}
+>>> tf = TagForm(d)
+>>> tf.is_bound
+True
+>>> tf.is_valid()
+True
+>>> tf.cleaned_data
+{'title': 'framework', 'slug': 'framework'}
+>>> t = tf.save()
+>>> t
+<Tag: framework>
+>>> t.id
+3
+>>>
+
+# create superuser
+(venv_be) black@vbu-2c6r60h:~/Desktop/blog_engine/app/blog_engine$ python manage.py createsuperuser
+Username (leave blank to use 'black'): black
+Email address: riins@bk.ru
+Password:
+Password (again):
+The password is too similar to the username.
+This password is too short. It must contain at least 8 characters.
+This password is too common.
+Bypass password validation and create user anyway? [y/N]: y
+Superuser created successfully.
+(venv_be) black@vbu-2c6r60h:~/Desktop/blog_engine/app/blog_engine$
+
+
+# paginator - need to order posts
+>>> from django.core.paginator import Paginator
+>>> from blog.models import Post
+>>> posts = Post.objects.all()
+>>> posts
+<QuerySet [<Post: New post>, <Post: new post2>, <Post: new post3>, <Post: new post4>, <Post: new post5>, <Post: Post 25.12.2019>, <Post: Post 25.12.2019-2>, <Post: Post 25.12.2019-3>, <Post: ateatatat>]>
+>>> paginator = Paginator(posts, 2)
+<string>:1: UnorderedObjectListWarning: Pagination may yield inconsistent results with an unordered object_list: <class 'blog.models.Post'> QuerySet.
+>>>
+now exiting InteractiveConsole...
+
+# paginator again without errors
+>>> from django.core.paginator import Paginator
+>>> from blog.models import Post
+>>> posts = Post.objects.all()
+>>> posts
+<QuerySet [<Post: ateatatat>, <Post: Post 25.12.2019-3>, <Post: Post 25.12.2019-2>, <Post: Post 25.12.2019>, <Post: new post5>, <Post: new post4>, <Post: new post3>, <Post: new post2>, <Post: New post>]>
+>>> paginator = Paginator(posts, 2)
+>>>
+
+# paginator objects
+>>> paginator = Paginator(posts, 2)
+>>> dir(paginator)
+['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_check_object_list_is_ordered', '_get_page', 'allow_empty_first_page', 'count', 'get_page', 'num_pages', 'object_list', 'orphans', 'page', 'page_range', 'per_page', 'validate_number']
+>>> page1 = paginator.get_page(1)
+>>> page1
+<Page 1 of 5>
+>>> dir(page1)
+['__abstractmethods__', '__class__', '__contains__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__getitem__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__iter__', '__le__', '__len__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__reversed__', '__setattr__', '__sizeof__', '__slots__', '__str__', '__subclasshook__', '__weakref__', '_abc_cache', '_abc_negative_cache', '_abc_negative_cache_version', '_abc_registry', 'count', 'end_index', 'has_next', 'has_other_pages', 'has_previous', 'index', 'next_page_number', 'number', 'object_list', 'paginator', 'previous_page_number', 'start_index']
+>>> page1.object_list
+<QuerySet [<Post: ateatatat>, <Post: Post 25.12.2019-3>]>
+>>> page1.number
+1
+>>>

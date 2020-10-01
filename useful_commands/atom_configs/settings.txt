@@ -1,0 +1,8 @@
+atom-live-server
+atom-runner
+autocomplete-python
+dbclick-tree-view
+highlight-selected
+reindent
+script
+minimap

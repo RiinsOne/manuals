@@ -1,0 +1,4 @@
+echo -e "to: receiver@domain.tld\nsubject: subject\n"| (cat - && uuencode /path/to/attachment attachment.name) | ssmtp receiver@gmail.com
+
+$ sudo apt-get install uudeview
+$ echo -e "From: myaddress@mydomain.com\nTo: youraddress@yourdomain.com\nSubject: mySubject\n\nBody-Text"|uuenview -a -bo MyAttachment|sendmail -t

@@ -1,0 +1,401 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF8">
+<style>
+p.c    { }
+h1     { font-size: 160%; font-weight: bold; padding-top: 1ex; padding-bottom: 1ex; }
+div.s1 { margin-left: 20px; padding-left: 10px; font-weight: bold; }
+div.s2 { margin-left: 80px; padding-left: 10px; font-weight: bold; }
+div.s3 { margin-left: 140px; padding-left: 10px; font-weight: bold; }
+div.r1 { margin-left: 20px; padding-left: 10px; }
+div.r2 { margin-left: 80px; padding-left: 10px; }
+div.r3 { margin-left: 140px; padding-left: 10px; }
+div.e  { margin-left: 20px; padding-left: 10px; font-weight: bold; <!--color: darkblue;--> }
+div.r  { margin-left: 20px; padding-left: 10px; <!--color: darkblue;--> }
+</style>
+</head>
+<body>
+<h1>
+Создание ролей
+</h1>
+<p class="C">
+Создадим роль:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">CREATE ROLE</span> alice <span style="color:#3b6ac8">LOGIN CREATEROLE</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE ROLE
+</pre></div>
+<p class="C">
+В этом модуле приглашение будет показывать имя роли, от которой выполняется
+команда.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Алиса имеет возможность подключения (атрибут LOGIN) и создания других ролей
+(CREATEROLE).
+</p>
+<p class="C">
+Проверим это:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#00a150">\c</span> <span style="color:#323232">-</span> alice
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;access_roles&quot; as user &quot;alice&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE ROLE</span> bob <span style="color:#3b6ac8">LOGIN</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE ROLE
+</pre></div>
+<p class="C">
+Действительно, получилось и подключиться, и создать другого пользователя, Боба.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+А вот Боб не сможет создать другую роль:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff; ">postgres$ <span style="color:#00a150">psql</span> <span style="color:#323232">-</span>U bob <span style="color:#323232">-</span>d access_roles
+</pre>
+</div>
+<div class="S2">
+<pre style="color:#323232; background-color:#ffffff;  ">bob<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE ROLE</span> charlie <span style="color:#3b6ac8">LOGIN</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R2"><pre class="R2">
+ERROR:  permission denied to create role
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Посмотреть роли, имеющиеся в кластере, можно так:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#00a150">\du</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+                                   List of roles
+ Role name |                         Attributes                         | Member of 
+-----------+------------------------------------------------------------+-----------
+ alice     | Create role                                                | {}
+ bob       |                                                            | {}
+ postgres  | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+
+</pre></div>
+<p class="C">
+Или в системном каталоге:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> usename <span style="color:#3b6ac8">FROM</span> pg_user<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ usename  
+----------
+ postgres
+ alice
+ bob
+(3 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Существующие роли можно изменять. Например, Алиса может отобрать у Боба
+право входа:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER ROLE</span> bob NOLOGIN<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER ROLE
+</pre></div>
+<p class="C">
+А у себя самой Алиса отберет CREATEROLE:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER ROLE</span> alice NOCREATEROLE<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER ROLE
+</pre></div>
+<p class="C">
+Такие пары, как LOGIN-NOLOGIN или CREATEROLE-NOCREATEROLE, есть и у других
+атрибутов.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Теперь Боб не сможет подключиться:
+</p>
+<div class="S2">
+<pre style="color:#323232; background-color:#ffffff;  ">bob<span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> <span style="color:#323232">-</span> bob
+</pre>
+</div>
+<div class="R2"><pre class="R2">
+\connect: FATAL:  role &quot;bob&quot; is not permitted to log in
+
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Групповые роли
+</h1>
+<p class="C">
+А Алиса теперь не может ни создавать новые роли, ни изменять атрибуты
+существующих:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER ROLE</span> bob <span style="color:#3b6ac8">LOGIN</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ERROR:  permission denied
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Чтобы снова наделить Алису супервозможностями, включим ее в
+суперпользовательскую роль postgres:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> <span style="color:#323232">-</span> postgres
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;access_roles&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">GRANT</span> postgres <span style="color:#3b6ac8">TO</span> alice<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+GRANT ROLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#00a150">\du</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+                                    List of roles
+ Role name |                         Attributes                         | Member of  
+-----------+------------------------------------------------------------+------------
+ alice     |                                                            | {postgres}
+ bob       | Cannot login                                               | {}
+ postgres  | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+А чтобы Алиса не злоупотребляла полномочиями, сделаем так, чтобы все ее
+команды попадали в журнал сообщений:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">ALTER ROLE</span> alice <span style="color:#3b6ac8">SET</span> log_min_duration_statement<span style="color:#323232">=</span><span style="color:#1094a0">0</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER ROLE
+</pre></div>
+<p class="C">
+Это еще один вариант установки конфигурационных параметров - он срабатывает
+при подключении пользователя к серверу.
+</p>
+<p class="C">
+Можно ограничить действие и конкретной базой данных:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">ALTER ROLE</span> alice <span style="color:#3b6ac8">RESET</span> log_min_duration_statement<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER ROLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">ALTER ROLE</span> alice <span style="color:#3b6ac8">IN DATABASE</span> postgres <span style="color:#3b6ac8">SET</span> log_min_duration_statement<span style="color:#323232">=</span><span style="color:#1094a0">0</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER ROLE
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Алиса не получает возможности групповой роли автоматически. Она может ими
+воспользоваться, только если переключится на эту роль:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#00a150">\c</span> <span style="color:#323232">-</span> alice
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;access_roles&quot; as user &quot;alice&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SET ROLE</span> postgres<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+SET
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER ROLE</span> bob <span style="color:#3b6ac8">LOGIN</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER ROLE
+</pre></div>
+<p class="C">
+Это напоминает команду su в ОС Unix.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Чтобы понять, кем является пользователь на самом деле, и на какую роль он
+переключился, есть функции:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT session_user</span><span style="color:#323232">,</span> <span style="color:#3b6ac8">current_user</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ session_user | current_user 
+--------------+--------------
+ alice        | postgres
+(1 row)
+
+</pre></div>
+<p class="C">
+Вернемся к прежней роли:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">RESET ROLE</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+RESET
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT session_user</span><span style="color:#323232">,</span> <span style="color:#3b6ac8">current_user</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ session_user | current_user 
+--------------+--------------
+ alice        | alice
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Владение объектами
+</h1>
+<p class="C">
+Когда Алиса создает какой-либо объект в БД, она становится его владельцем.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE TABLE</span> <span style="color:#c73a69">test</span><span style="color:#323232">(</span>id <span style="color:#a00050">integer</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE TABLE
+</pre></div>
+<p class="C">
+Как в этом убедиться? Владелец указан в столбце owner:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#00a150">\dt</span> test
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+       List of relations
+ Schema | Name | Type  | Owner 
+--------+------+-------+-------
+ public | test | table | alice
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Удаление ролей
+</h1>
+<p class="C">
+Удалить роль можно, если нет объектов, которыми она владеет.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> <span style="color:#323232">-</span> postgres
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;access_roles&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">DROP ROLE</span> alice<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ERROR:  role &quot;alice&quot; cannot be dropped because some objects depend on it
+DETAIL:  owner of table test
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Чтобы удалить Алису, можно передать ее объекты другой роли:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">REASSIGN OWNED BY</span> alice <span style="color:#3b6ac8">TO</span> bob<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+REASSIGN OWNED
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#00a150">\dt</span> test
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+       List of relations
+ Schema | Name | Type  | Owner 
+--------+------+-------+-------
+ public | test | table | bob
+(1 row)
+
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">DROP ROLE</span> alice<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+DROP ROLE
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Другой вариант - удалить объекты.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">DROP OWNED BY</span> bob<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+DROP OWNED
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">DROP ROLE</span> bob<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+DROP ROLE
+</pre></div>
+<p class="C">
+Надо только иметь в виду, что роль может владеть объектами в разных базах
+данных.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Конец демонстрации.
+</p>
+</body>
+</html>

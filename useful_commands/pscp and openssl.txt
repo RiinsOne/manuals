@@ -1,0 +1,27 @@
+﻿pscp опции путь_файлу имя_пользователя@хост:/путь/к/файлу/на/удаленном/хосте
+pscp -load ms F:\Downloads\Misc\152_key.zip black@84.201.149.213:/home/black/sitadata
+
+https://losst.ru/kak-polzovatsya-putty#5_scp_PuTTY
+
+
+дешифровка
+openssl enc -d -md md5 -aes-256-cbc -in 15216APR19CKP.XML.gz.enc -out 15216APR19CKP.XML.gz -pass pass:kApVDaSkWwazOD19rO0-Qt3eD1zcoAYJtp2hKhmqG6J7n00u
+
+gzip -d 15216APR19CKP.XML.gz
+
+
+
+
+Edit the /etc/ssh/sshd_config file.
+Change PasswordAuthentication and ChallengeResponseAuthentication to yes.
+3a. Restart ssh /etc/init.d/ssh restart.
+OR
+3b. better you use service sshd restart
+
+надо ещё сделать пароль для юзера
+
+pscp -load ms M:\Programs\workspace\ssh_key\public_key black@84.201.149.213:/home/black/.ssh
+
+
+for linux
+scp /home/black/.ssh/ansible-cl1.pem black@10.130.0.10:/home/black/.ssh

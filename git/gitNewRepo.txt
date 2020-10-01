@@ -1,0 +1,8 @@
+1. Создаем новый репозиторий на github
+2. Переходим в нужную папку и инициализируем репозиторий
+    git init
+3. git add .
+4. git commit -m "first commit"
+5. Далее деалем ремоут на github
+    git remote add origin git@github.com:RiinsOne/ansible.git
+6. git push -u origin master

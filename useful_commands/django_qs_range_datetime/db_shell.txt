@@ -1,0 +1,264 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Try the new cross-platform PowerShell https://aka.ms/pscore6
+
+C:\WINDOWS\system32
+>cd M:\Programs\workspace\programming\venv-projects\customusermodel_django
+M:\Programs\workspace\programming\venv-projects\customusermodel_django
+>.\venv\Scripts\activate
+(venv) M:\Programs\workspace\programming\venv-projects\customusermodel_django
+>cd .\app\myapp\
+(venv) M:\Programs\workspace\programming\venv-projects\customusermodel_django\app\myapp
+>python .\manage.py shell
+Python 3.8.1 (tags/v3.8.1:1b293b6, Dec 18 2019, 22:39:24) [MSC v.1916 32 bit (Intel)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+(InteractiveConsole)
+>>> from user_model.models import Message
+>>> msg1 = Message.objects.all().first()
+>>> msg1
+<Message: OGASANOV, OG, 22.01.2020 12:40:21>
+>>> msg1.date_pub
+datetime.datetime(2020, 1, 22, 12, 40, 21, 751996, tzinfo=<UTC>)
+>>> dir(msg1.date_pub)
+['__add__', '__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__radd__', '__reduce__', '__reduce_ex__', '__repr__', '__rsub__', '__setattr__', '__sizeof__', '__str__', '__sub__', '__subclasshook__', 'astimezone', 'combine', 'ctime', 'date', 'day', 'dst', 'fold', 'fromisocalendar', 'fromisoformat', 'fromordinal', 'fromtimestamp', 'hour', 'isocalendar', 'isoformat', 'isoweekday', 'max', 'microsecond', 'min', 'minute', 'month', 'now', 'replace', 'resolution', 'second', 'strftime', 'strptime', 'time', 'timestamp', 'timetuple', 'timetz', 'today', 'toordinal', 'tzinfo', 'tzname', 'utcfromtimestamp', 'utcnow', 'utcoffset', 'utctimetuple', 'weekday', 'year']
+>>> msgs_range = Message.objects.filter(date_pub__range=['2020, 1, 22, 12, 40, 21'], ['2020, 1, 22, 08, 00, 00'])
+  File "<console>", line 1
+SyntaxError: positional argument follows keyword argument
+>>> msgs_range = Message.objects.filter(date_pub__range=['2020, 1, 22, 12, 40, 21'], ['2020, 1, 22, 08, 00, 00'])
+  File "<console>", line 1
+SyntaxError: positional argument follows keyword argument
+>>>
+>>>
+>>> dir(msg1.date_pub)
+KeyboardInterrupt
+>>>
+KeyboardInterrupt
+>>> from datetime import date
+>>> startdate = date.today()
+>>> enddate = startdate + timedelta(days=1)
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+NameError: name 'timedelta' is not defined
+>>> from datetime import timedelta
+>>> enddate = startdate + timedelta(days=1)
+>>> msgs_range = Message.objects.filter(date_pub__range=[startdate, enddate])
+M:\Programs\workspace\programming\venv-projects\customusermodel_django\venv\lib\site-packages\django\db\models\fields\__init__.py:1303: RuntimeWarning: DateTimeField Message.date_pub received a naive datetime (2020-01-22 00:00:00) while time zone support is active.
+  warnings.warn("DateTimeField %s.%s received a naive datetime "
+M:\Programs\workspace\programming\venv-projects\customusermodel_django\venv\lib\site-packages\django\db\models\fields\__init__.py:1303: RuntimeWarning: DateTimeField Message.date_pub received a naive datetime (2020-01-23 00:00:00) while time zone support is active.
+  warnings.warn("DateTimeField %s.%s received a naive datetime "
+>>> msgs_range = Message.objects.filter(date_pub__range=['2020-1-22 12:40:21'], ['2020-1-22 08:00:00'])
+  File "<console>", line 1
+SyntaxError: positional argument follows keyword argument
+>>> msg1
+<Message: OGASANOV, OG, 22.01.2020 12:40:21>
+>>> msg1.date_pub
+datetime.datetime(2020, 1, 22, 12, 40, 21, 751996, tzinfo=<UTC>)
+>>> dir(msg1.date_pub)
+['__add__', '__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__radd__', '__reduce__', '__reduce_ex__', '__repr__', '__rsub__', '__setattr__', '__sizeof__', '__str__', '__sub__', '__subclasshook__', 'astimezone', 'combine', 'ctime', 'date', 'day', 'dst', 'fold', 'fromisocalendar', 'fromisoformat', 'fromordinal', 'fromtimestamp', 'hour', 'isocalendar', 'isoformat', 'isoweekday', 'max', 'microsecond', 'min', 'minute', 'month', 'now', 'replace', 'resolution', 'second', 'strftime', 'strptime', 'time', 'timestamp', 'timetuple', 'timetz', 'today', 'toordinal', 'tzinfo', 'tzname', 'utcfromtimestamp', 'utcnow', 'utcoffset', 'utctimetuple', 'weekday', 'year']
+>>> dp = msg1.date_pub
+>>> dp
+datetime.datetime(2020, 1, 22, 12, 40, 21, 751996, tzinfo=<UTC>)
+>>> dir(dp)
+['__add__', '__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__radd__', '__reduce__', '__reduce_ex__', '__repr__', '__rsub__', '__setattr__', '__sizeof__', '__str__', '__sub__', '__subclasshook__', 'astimezone', 'combine', 'ctime', 'date', 'day', 'dst', 'fold', 'fromisocalendar', 'fromisoformat', 'fromordinal', 'fromtimestamp', 'hour', 'isocalendar', 'isoformat', 'isoweekday', 'max', 'microsecond', 'min', 'minute', 'month', 'now', 'replace', 'resolution', 'second', 'strftime', 'strptime', 'time', 'timestamp', 'timetuple', 'timetz', 'today', 'toordinal', 'tzinfo', 'tzname', 'utcfromtimestamp', 'utcnow', 'utcoffset', 'utctimetuple', 'weekday', 'year']
+>>> help(dp.__gt__)
+Help on method-wrapper object:
+
+__gt__ = class method-wrapper(object)
+ |  Methods defined here:
+ |
+ |  __call__(self, /, *args, **kwargs)
+ |      Call self as a function.
+ |
+ |  __eq__(self, value, /)
+ |      Return self==value.
+ |
+ |  __ge__(self, value, /)
+ |      Return self>=value.
+ |
+ |  __getattribute__(self, name, /)
+ |      Return getattr(self, name).
+ |
+ |  __gt__(self, value, /)
+ |      Return self>value.
+ |
+ |  __hash__(self, /)
+ |      Return hash(self).
+ |
+ |  __le__(self, value, /)
+ |      Return self<=value.
+ |
+ |  __lt__(self, value, /)
+ |      Return self<value.
+ |
+ |  __ne__(self, value, /)
+ |      Return self!=value.
+ |
+ |  __reduce__(...)
+ |      Helper for pickle.
+ |
+ |  __repr__(self, /)
+ |      Return repr(self).
+ |
+ |  ----------------------------------------------------------------------
+ |  Data descriptors defined here:
+ |
+ |  __objclass__
+ |
+ |  __self__
+ |
+ |  __text_signature__
+
+>>>
+>>>
+>>> dir(dp.__gt__)
+['__call__', '__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__name__', '__ne__', '__new__', '__objclass__', '__qualname__', '__reduce__', '__reduce_ex__', '__repr__', '__self__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__text_signature__']
+>>> msgs = Message.objects.filter(date_pub.year=2020, date_pub.month=01, date_pub.day=22)
+  File "<console>", line 1
+SyntaxError: leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers
+>>> msgs = Message.objects.filter(date_pub__year=2020, date_pub__month=01, date_pub__day=22)
+  File "<console>", line 1
+SyntaxError: leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers
+>>> from datetime import date
+>>> today = date.today()
+>>> today_filter =  MyModel.objects.filter(post_date__year=today.year,
+...                                        post_date__month=today.month,
+... today_filter =  MyModel.objects.filter(post_date__year=today.year,
+KeyboardInterrupt
+>>>
+KeyboardInterrupt
+>>> from datetime import date
+>>> today = date.today()
+>>> today_filter = Message.objects.filter(date_pub__year=today.year,
+... date_pub__month=today.month,
+... date_pub__month=today.day)
+  File "<console>", line 3
+SyntaxError: keyword argument repeated
+>>> today_filter = Message.objects.filter(date_pub__year=today.year,
+... date_pub__month=today.month,
+... date_pub__day=today.day)
+>>> today_filter
+<QuerySet [<Message: OGASANOV, OG, 22.01.2020 12:40:21>, <Message: VBORISOVA, OG, 22.01.2020 10:28:11>, <Message: OGASANOV, OG, 22.01.2020 08:28:13>, <Message: OGASANOV, OG, 22.01.2020 08:27:41>, <Message: OGASANOV, OG, 22.01.2020 08:27:34>, <Message: OGASANOV, OG, 22.01.2020 08:27:27>, <Message: OGASANOV, OG, 22.01.2020 08:27:20>, <Message: OGASANOV, OG, 22.01.2020 08:27:12>, <Message: OGASANOV, OG, 22.01.2020 08:27:05>, <Message: OGASANOV, OG, 22.01.2020 08:26:57>, <Message: OGASANOV, OG, 22.01.2020 08:23:44>, <Message: OGASANOV, OG, 22.01.2020 08:21:20>, <Message: OGASANOV, OG, 22.01.2020 08:20:53>, <Message: OGASANOV, OG, 22.01.2020 08:20:26>, <Message: OGASANOV, OG, 22.01.2020 07:48:49>]>
+>>> today
+datetime.date(2020, 1, 22)
+>>> today.year
+2020
+>>> today.month
+1
+>>> today.hour
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+AttributeError: 'datetime.date' object has no attribute 'hour'
+>>> datetimetoday = datetime.today()
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+NameError: name 'datetime' is not defined
+>>> from datetime import datetime
+>>> datetimetoday = datetime.today()
+>>> datetimetoday
+datetime.datetime(2020, 1, 22, 21, 32, 37, 613797)
+>>> today_filter = Message.objects.filter(
+KeyboardInterrupt
+>>>
+KeyboardInterrupt
+>>> dp
+datetime.datetime(2020, 1, 22, 12, 40, 21, 751996, tzinfo=<UTC>)
+>>> dir(dp)
+['__add__', '__class__', '__delattr__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__ne__', '__new__', '__radd__', '__reduce__', '__reduce_ex__', '__repr__', '__rsub__', '__setattr__', '__sizeof__', '__str__', '__sub__', '__subclasshook__', 'astimezone', 'combine', 'ctime', 'date', 'day', 'dst', 'fold', 'fromisocalendar', 'fromisoformat', 'fromordinal', 'fromtimestamp', 'hour', 'isocalendar', 'isoformat', 'isoweekday', 'max', 'microsecond', 'min', 'minute', 'month', 'now', 'replace', 'resolution', 'second', 'strftime', 'strptime', 'time', 'timestamp', 'timetuple', 'timetz', 'today', 'toordinal', 'tzinfo', 'tzname', 'utcfromtimestamp', 'utcnow', 'utcoffset', 'utctimetuple', 'weekday', 'year']
+>>> msgs = Message.objects.filter(date_pub__date=datetime.today())
+>>> msgs
+<QuerySet [<Message: OGASANOV, OG, 22.01.2020 12:40:21>, <Message: VBORISOVA, OG, 22.01.2020 10:28:11>, <Message: OGASANOV, OG, 22.01.2020 08:28:13>, <Message: OGASANOV, OG, 22.01.2020 08:27:41>, <Message: OGASANOV, OG, 22.01.2020 08:27:34>, <Message: OGASANOV, OG, 22.01.2020 08:27:27>, <Message: OGASANOV, OG, 22.01.2020 08:27:20>, <Message: OGASANOV, OG, 22.01.2020 08:27:12>, <Message: OGASANOV, OG, 22.01.2020 08:27:05>, <Message: OGASANOV, OG, 22.01.2020 08:26:57>, <Message: OGASANOV, OG, 22.01.2020 08:23:44>, <Message: OGASANOV, OG, 22.01.2020 08:21:20>, <Message: OGASANOV, OG, 22.01.2020 08:20:53>, <Message: OGASANOV, OG, 22.01.2020 08:20:26>, <Message: OGASANOV, OG, 22.01.2020 07:48:49>]>
+>>> datetime.today()
+datetime.datetime(2020, 1, 22, 21, 39, 36, 453040)
+>>> for i in msgs:
+...     i.body
+...
+'test api 15:40\r\nline2\r\nline3\r\ntest message\r\nline4'
+'line1\r\nline2\r\nline3'
+'test api bhg\r\n11:28'
+'test message7'
+'test message6'
+'test message5'
+'test message4'
+'test message3'
+'test message2'
+'test message1'
+'test bhg\r\n11:23\r\napi test'
+'test api dah\r\n11:21'
+'test api bhg\r\n11:20\r\ntest message\r\nagain'
+'test api bhg\r\n11:20\r\ntest message'
+'test api dah and bhg\r\nbaggage handling group\r\n10:48'
+>>> from datetime import date
+>>> msgs = Message.objects.filter(date_pub__gte=date(
+KeyboardInterrupt
+>>> date
+<class 'datetime.date'>
+>>> date(2020, 01, 22)
+  File "<console>", line 1
+SyntaxError: leading zeros in decimal integer literals are not permitted; use an 0o prefix for octal integers
+>>> date(2020, 1, 22)
+datetime.date(2020, 1, 22)
+>>> msgs = Message.objects.filter(date_pub__gte=date(2020, 1, 20),
+...                             date_pub__lte=date(2020, 1, 21))
+M:\Programs\workspace\programming\venv-projects\customusermodel_django\venv\lib\site-packages\django\db\models\fields\__init__.py:1303: RuntimeWarning: DateTimeField Message.date_pub received a naive datetime (2020-01-20 00:00:00) while time zone support is active.
+  warnings.warn("DateTimeField %s.%s received a naive datetime "
+M:\Programs\workspace\programming\venv-projects\customusermodel_django\venv\lib\site-packages\django\db\models\fields\__init__.py:1303: RuntimeWarning: DateTimeField Message.date_pub received a naive datetime (2020-01-21 00:00:00) while time zone support is active.
+  warnings.warn("DateTimeField %s.%s received a naive datetime "
+>>> datetime
+<class 'datetime.datetime'>
+>>> datetime.now                     pub__lte=date(2020, 1, 21))
+<built-in method now of type object at 0x688BB3B0>
+>>> datetime.now()
+datetime.datetime(2020, 1, 22, 22, 4, 2, 944483)
+>>> msgs = Message.objects.filter(date_pub__gte=datetime(2020, 1, 20, 00:00:00),
+  File "<console>", line 1
+    msgs = Message.objects.filter(date_pub__gte=datetime(2020, 1, 20, 00:00:00),
+                                                                        ^
+SyntaxError: invalid syntax
+>>> msgs = Message.objects.filter(date_pub__gte=datetime(2020, 1, 20, 0, 0, 0),
+...                             date_pub__lte=datetime(2020, 1, 21, 23, 59, 59)
+...
+...
+... )
+M:\Programs\workspace\programming\venv-projects\customusermodel_django\venv\lib\site-packages\django\db\models\fields\__init__.py:1361: RuntimeWarning: DateTimeField Message.date_pub received a naive datetime (2020-01-20 00:00:00) while time zone support is active.
+  warnings.warn("DateTimeField %s received a naive datetime (%s)"
+M:\Programs\workspace\programming\venv-projects\customusermodel_django\venv\lib\site-packages\django\db\models\fields\__init__.py:1361: RuntimeWarning: DateTimeField Message.date_pub received a naive datetime (2020-01-21 23:59:59) while time zone support is active.
+  warnings.warn("DateTimeField %s received a naive datetime (%s)"
+>>> dt = datetime.now()
+>>> dt
+datetime.datetime(2020, 1, 22, 22, 14, 18, 621985)
+>>> start = dt.replace(hour=0, minute=0, second=0, microsecond=0)
+>>> end = dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+>>> msgs = Message.objects.filter(date_pub__range=(start, end))
+M:\Programs\workspace\programming\venv-projects\customusermodel_django\venv\lib\site-packages\django\db\models\fields\__init__.py:1361: RuntimeWarning: DateTimeField Message.date_pub received a naive datetime (2020-01-22 00:00:00) while time zone support is active.
+  warnings.warn("DateTimeField %s received a naive datetime (%s)"
+M:\Programs\workspace\programming\venv-projects\customusermodel_django\venv\lib\site-packages\django\db\models\fields\__init__.py:1361: RuntimeWarning: DateTimeField Message.date_pub received a naive datetime (2020-01-22 23:59:59.999999) while time zone support is active.
+  warnings.warn("DateTimeField %s received a naive datetime (%s)"
+>>> msgs = Message.objects.filter(date_pub__range=(start, end))
+KeyboardInterrupt
+>>> start
+datetime.datetime(2020, 1, 22, 0, 0)
+>>> end
+datetime.datetime(2020, 1, 22, 23, 59, 59, 999999)
+>>> start = dt.replace(hour=0, minute=0, second=1, microsecond=1)
+>>> start
+datetime.datetime(2020, 1, 22, 0, 0, 1, 1)
+>>> end
+datetime.datetime(2020, 1, 22, 23, 59, 59, 999999)
+>>> msgs = Message.objects.filter(date_pub__range=(start, end))
+M:\Programs\workspace\programming\venv-projects\customusermodel_django\venv\lib\site-packages\django\db\models\fields\__init__.py:1361: RuntimeWarning: DateTimeField Message.date_pub received a naive datetime (2020-01-22 00:00:01.000001) while time zone support is active.
+  warnings.warn("DateTimeField %s received a naive datetime (%s)"
+>>> msgs = Message.objects.filter(date_pub__gte=start,
+...                             date_pub__lte=end)
+>>>
+>>>
+>>>
+KeyboardInterrupt
+>>> msgs = Message.objects.filter(date_pub__gte=start, date_pub__lte=end)
+>>> msgs
+<QuerySet [<Message: OGASANOV, OG, 22.01.2020 12:40:21>, <Message: VBORISOVA, OG, 22.01.2020 10:28:11>, <Message: OGASANOV, OG, 22.01.2020 08:28:13>, <Message: OGASANOV, OG, 22.01.2020 08:27:41>, <Message: OGASANOV, OG, 22.01.2020 08:27:34>, <Message: OGASANOV, OG, 22.01.2020 08:27:27>, <Message: OGASANOV, OG, 22.01.2020 08:27:20>, <Message: OGASANOV, OG, 22.01.2020 08:27:12>, <Message: OGASANOV, OG, 22.01.2020 08:27:05>, <Message: OGASANOV, OG, 22.01.2020 08:26:57>, <Message: OGASANOV, OG, 22.01.2020 08:23:44>, <Message: OGASANOV, OG, 22.01.2020 08:21:20>, <Message: OGASANOV, OG, 22.01.2020 08:20:53>, <Message: OGASANOV, OG, 22.01.2020 08:20:26>, <Message: OGASANOV, OG, 22.01.2020 07:48:49>]>
+>>> start
+datetime.datetime(2020, 1, 22, 0, 0, 1, 1)
+>>> end
+datetime.datetime(2020, 1, 22, 23, 59, 59, 999999)
+>>>

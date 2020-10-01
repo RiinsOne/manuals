@@ -1,0 +1,70 @@
+sudo apt-get install git
+
+git config --global user.name "Riins"
+git config --global user.email "riins@bk.ru"
+
+git init
+# Initialized empty Git repository in /home/black/Desktop/app/.git/
+
+git add main.py one
+git status
+
+git commit -m "Initial commit"
+
+touch .gitignore
+git add .
+
+git diff
+# -import sys
+# +print('hello')
+
+# create a new repo on github
+# cd ~/.ssh -> ssh-keygen -> id_rsa.pub
+git remote add origin git@github.com:RiinsOne/test-project.git
+git push -u origin master
+
+################################################################
+
+git branch
+# * master
+
+git checkout -b feature1  # -b -> create a new branch
+# Switched to a new branch 'feature1'
+
+git log --graph  # commits history, q -> quit
+
+git checkout master  # switch to master branch
+
+git merge feature1
+# we are now at master branch and we tell a branch that we want to merge with master
+git log --graph
+
+# second type of merge
+git checkout feature1  # we are on feature branch
+git rebase master  # moves all commits in front of all master commits
+git checkout master  # switch on master
+git merge feature1  # merge master with branch feature1
+git log --graph  # all commits are now linearly
+
+# third type of merge
+git rebase master  # type branch from which we want to rebase
+git checkout master
+git merge --no-ff feature1  # like second type but in that case we save the history changes
+
+git pull origin  # download all code from master branch
+git pull --rebase origin
+# git config --global --bool pull.rebase true  # make this rule as default instead of git pull
+
+################################################################
+
+
+
+
+
+
+
+
+
+
+
+

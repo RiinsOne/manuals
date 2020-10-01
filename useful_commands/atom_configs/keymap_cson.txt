@@ -1,0 +1,14 @@
+'atom-text-editor':
+  'shift-space': 'editor:move-to-end-of-line'
+  'alt-h': 'core:move-left'
+  'alt-j': 'core:move-down'
+  'alt-k': 'core:move-up'
+  'f5': 'Python run: run-f5'
+  'f6': 'Python run: run-f6'
+
+
+
+
+'atom-text-editor:not([mini])':
+  'tab': 'snippets:next-tab-stop'
+  'shift-tab': 'snippets:previouse-tab-stop'

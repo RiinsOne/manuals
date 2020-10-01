@@ -1,0 +1,51 @@
+#
+docker run -it --name myapp --hostname myapp ubuntu bash
+root@myapp:/# apt update
+root@myapp:/# apt install cowsay
+
+# создадим символьную ссылку, чтобы при запуске не писать полный путь к приложению
+root@myapp:/# ln -s /usr/games/cowsay /usr/bin/cowsay
+# теперь можно использовать cowsay, вместо /usr/bin/cowsay
+root@myapp:~# cowsay "test"
+
+# превращение контейнера в образ
+# docker commit, а далее имя контейнера, имя пользователя и имя для образа (суть приложения)
+$ docker commit myapp riins/cowsayapp
+sha256:c7b17292297f53646ceda138af6b9676e4d97c9ff4c244425295b16f70ae7008
+
+#
+$ docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+riins/cowsayapp     latest              c7b17292297f        42 seconds ago      133MB
+bitnami/apache      latest              dce3065175ef        43 hours ago        123MB
+ubuntu              latest              ccc6e87d482b        4 weeks ago         64.2MB
+hello-world         latest              fce289e99eb9        13 months ago       1.84kB
+
+# запустим контейнер из нашего образа
+$ docker run riins/cowsayapp cowsay "Hello, OG"
+ ___________
+< Hello, OG >
+ -----------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
+# вместо bash указали другое приложение для запуска
+
+# запушить образ в репозиторий докер хаб
+docker login  # вводим логин/пароль
+docker push riins/cowsayapp
+# результат docker push
+The push refers to repository [docker.io/riins/cowsayapp]
+4ebf214bfba7: Pushed                                                                      f55aa0bd26b8: Mounted from library/ubuntu                                                 1d0dfb259f6a: Mounted from library/ubuntu                                                 21ec61b65b20: Mounted from library/ubuntu                                                 43c67172d1d1: Mounted from library/ubuntu                                                 latest: digest: sha256:599a2e903514822de334d205847b7f1d325d56a8376f5072d70ffdb19d8b5450 size: 1364
+
+# удаляем все остановленные контейнеры
+$ docker rm -v $(docker ps -aq -f status=exited)
+
+# удаляем образы, docker rmi <image id>
+docker images
+docker rmi c7b17292297f
+
+# проверяем и образ будет скачиваться из нашего репозитория, т.к. локально его нет
+docker run riins/cowsayapp cowsay "OG"

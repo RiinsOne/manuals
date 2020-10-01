@@ -1,0 +1,10 @@
+# переходим в директорию с фалом Dockerfile и выполняем команду
+docker build -t cowsayapp .
+# создаст image с названием cowsayapp, с функционалом описанным в конфиге
+
+# можно запускать контейнер без указания cowsay, т.к. мы прописали уже в конфиге
+docker run cowsayapp "hello og"
+
+# после изменений в докерфайле, нужно пересобрать образ
+# MAINTAINER ORKHAN GASANOV <riins@bk.ru>
+docker build -t cowsayapp .

@@ -1,0 +1,646 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF8">
+<style>
+p.c    { }
+h1     { font-size: 160%; font-weight: bold; padding-top: 1ex; padding-bottom: 1ex; }
+div.s1 { margin-left: 20px; padding-left: 10px; font-weight: bold; }
+div.s2 { margin-left: 80px; padding-left: 10px; font-weight: bold; }
+div.s3 { margin-left: 140px; padding-left: 10px; font-weight: bold; }
+div.r1 { margin-left: 20px; padding-left: 10px; }
+div.r2 { margin-left: 80px; padding-left: 10px; }
+div.r3 { margin-left: 140px; padding-left: 10px; }
+div.e  { margin-left: 20px; padding-left: 10px; font-weight: bold; <!--color: darkblue;--> }
+div.r  { margin-left: 20px; padding-left: 10px; <!--color: darkblue;--> }
+</style>
+</head>
+<body>
+<h1>
+Настройка
+</h1>
+<p class="C">
+Вначале включим сбор статистики ввода-вывода и выполнения функций.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER SYSTEM SET</span> track_io_timing<span style="color:#323232">=</span><span style="color:#3b6ac8">on</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER SYSTEM
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER SYSTEM SET</span> track_functions<span style="color:#323232">=</span><span style="color:#1094a0">'all'</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER SYSTEM
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">pg_reload_conf</span><span style="color:#323232">();</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ pg_reload_conf 
+----------------
+ t
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Смотреть на активности сервера имеет смысл, когда какие-то активности
+на самом деле есть. Чтобы сымитировать нагрузку, воспользуемся pgbench -
+штатной утилитой для запуска эталонных тестов.
+</p>
+<p class="C">
+Сначала утилита создает набор таблиц и заполняет их данными.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE DATABASE</span> admin_monitoring<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE DATABASE
+</pre></div>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#00a150">pgbench</span> <span style="color:#323232">-</span>i admin_monitoring
+</pre>
+</div>
+<div class="R"><pre class="R">
+NOTICE:  table &quot;pgbench_history&quot; does not exist, skipping
+NOTICE:  table &quot;pgbench_tellers&quot; does not exist, skipping
+NOTICE:  table &quot;pgbench_accounts&quot; does not exist, skipping
+NOTICE:  table &quot;pgbench_branches&quot; does not exist, skipping
+creating tables...
+100000 of 100000 tuples (100%) done (elapsed 0.13 s, remaining 0.00 s)
+vacuum...
+set primary keys...
+done.
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Затем сбросим все накопленные ранее статистики.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> admin_monitoring
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;admin_monitoring&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">pg_stat_reset</span><span style="color:#323232">();</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ pg_stat_reset 
+---------------
+ 
+(1 row)
+
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">pg_stat_reset_shared</span><span style="color:#323232">(</span><span style="color:#1094a0">'bgwriter'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ pg_stat_reset_shared 
+----------------------
+ 
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Статистика
+</h1>
+<p class="C">
+Теперь запускаем тест TPC-B на несколько секунд.
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#00a150">pgbench</span> <span style="color:#323232">-</span>T <span style="color:#1094a0">10</span> admin_monitoring
+</pre>
+</div>
+<div class="R"><pre class="R">
+starting vacuum...end.
+transaction type: &lt;builtin: TPC-B (sort of)&gt;
+scaling factor: 1
+query mode: simple
+number of clients: 1
+number of threads: 1
+duration: 10 s
+number of transactions actually processed: 9304
+latency average = 1.075 ms
+tps = 930.308591 (including connections establishing)
+tps = 930.517389 (excluding connections establishing)
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">VACUUM</span> pgbench_accounts<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+VACUUM
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Теперь мы можем посмотреть статистику обращения к таблицам в терминах строк:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_stat_all_tables <span style="color:#3b6ac8">WHERE</span> relid<span style="color:#323232">=</span><span style="color:#1094a0">'pgbench_accounts'</span><span style="color:#323232">::</span><span style="color:#a00050">regclass</span> <span style="color:#00a150">\gx</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+-[ RECORD 1 ]-------+-----------------
+relid               | 16519
+schemaname          | public
+relname             | pgbench_accounts
+seq_scan            | 0
+seq_tup_read        | 0
+idx_scan            | 18608
+idx_tup_fetch       | 18608
+n_tup_ins           | 0
+n_tup_upd           | 9304
+n_tup_del           | 0
+n_tup_hot_upd       | 7694
+n_live_tup          | 0
+n_dead_tup          | 3171
+n_mod_since_analyze | 9304
+last_vacuum         | 
+last_autovacuum     | 
+last_analyze        | 
+last_autoanalyze    | 
+vacuum_count        | 0
+autovacuum_count    | 0
+analyze_count       | 0
+autoanalyze_count   | 0
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+И в терминах страниц:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_statio_all_tables <span style="color:#3b6ac8">WHERE</span> relid<span style="color:#323232">=</span><span style="color:#1094a0">'pgbench_accounts'</span><span style="color:#323232">::</span><span style="color:#a00050">regclass</span> <span style="color:#00a150">\gx</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+-[ RECORD 1 ]---+-----------------
+relid           | 16519
+schemaname      | public
+relname         | pgbench_accounts
+heap_blks_read  | 25
+heap_blks_hit   | 34524
+idx_blks_read   | 221
+idx_blks_hit    | 40405
+toast_blks_read | 
+toast_blks_hit  | 
+tidx_blks_read  | 
+tidx_blks_hit   | 
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Существуют аналогичные представления для индексов:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_stat_all_indexes <span style="color:#3b6ac8">WHERE</span> relid<span style="color:#323232">=</span><span style="color:#1094a0">'pgbench_accounts'</span><span style="color:#323232">::</span><span style="color:#a00050">regclass</span> <span style="color:#00a150">\gx</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+-[ RECORD 1 ]-+----------------------
+relid         | 16519
+indexrelid    | 16530
+schemaname    | public
+relname       | pgbench_accounts
+indexrelname  | pgbench_accounts_pkey
+idx_scan      | 18608
+idx_tup_read  | 20329
+idx_tup_fetch | 18608
+
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_statio_all_indexes <span style="color:#3b6ac8">WHERE</span> relid<span style="color:#323232">=</span><span style="color:#1094a0">'pgbench_accounts'</span><span style="color:#323232">::</span><span style="color:#a00050">regclass</span> <span style="color:#00a150">\gx</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+-[ RECORD 1 ]-+----------------------
+relid         | 16519
+indexrelid    | 16530
+schemaname    | public
+relname       | pgbench_accounts
+indexrelname  | pgbench_accounts_pkey
+idx_blks_read | 221
+idx_blks_hit  | 40405
+
+</pre></div>
+<p class="C">
+А также варианты для пользовательских и системных объектов (all, user, sys),
+для статистики текущей транзакции (pg_stat_xact*) и др.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Можно посмотреть глобальную статистику по всей базе данных:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_stat_database <span style="color:#3b6ac8">WHERE</span> datname<span style="color:#323232">=</span><span style="color:#1094a0">'admin_monitoring'</span> <span style="color:#00a150">\gx</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+-[ RECORD 1 ]--+-----------------------------
+datid          | 16512
+datname        | admin_monitoring
+numbackends    | 1
+xact_commit    | 9314
+xact_rollback  | 0
+blks_read      | 330
+blks_hit       | 121986
+tup_returned   | 124242
+tup_fetched    | 18782
+tup_inserted   | 9304
+tup_updated    | 27913
+tup_deleted    | 0
+conflicts      | 0
+temp_files     | 0
+temp_bytes     | 0
+deadlocks      | 0
+blk_read_time  | 4.578
+blk_write_time | 0
+stats_reset    | 2019-03-31 15:25:42.27966+03
+
+</pre></div>
+<p class="C">
+Здесь есть информация о количестве произошедших взаимоблокировок,
+зафиксированных и отмененных транзакций, использовании временных файлов.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Отдельно доступна статистика по процессам фоновой записи и контрольной точки,
+ввиду ее важности для мониторинга экземпляра:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CHECKPOINT</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CHECKPOINT
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_stat_bgwriter <span style="color:#00a150">\gx</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+-[ RECORD 1 ]---------+------------------------------
+checkpoints_timed     | 0
+checkpoints_req       | 1
+checkpoint_write_time | 35
+checkpoint_sync_time  | 23
+buffers_checkpoint    | 1953
+buffers_clean         | 0
+maxwritten_clean      | 0
+buffers_backend       | 1700
+buffers_backend_fsync | 0
+buffers_alloc         | 391
+stats_reset           | 2019-03-31 15:25:42.329588+03
+
+</pre></div>
+<ul class="U">
+<li>buffers_clean      - количество страниц, записанных фоновой записью;</li>
+<li>buffers_checkpoint - количество страниц, записанных контрольной точкой;</li>
+<li>buffers_backend    - количество страниц, записанных серверными процессами.</li>
+</ul>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Текущие активности
+</h1>
+<p class="C">
+Воспроизведем сценарий, в котором один процесс блокирует выполнение другого,
+и попробуем разобраться в ситуации с помощью системных представлений.
+</p>
+<p class="C">
+Создадим таблицу с одной строкой:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE TABLE</span> <span style="color:#c73a69">t</span><span style="color:#323232">(</span>n <span style="color:#a00050">integer</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE TABLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> t <span style="color:#3b6ac8">VALUES</span><span style="color:#323232">(</span><span style="color:#1094a0">42</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+INSERT 0 1
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Запустим два сеанса, один из которых изменяет таблицу и ничего не делает:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff; ">postgres$ <span style="color:#00a150">psql</span> <span style="color:#323232">-</span>d admin_monitoring
+</pre>
+</div>
+<div class="S2">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">BEGIN</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R2"><pre class="R2">
+BEGIN
+</pre></div>
+<div class="S2">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">UPDATE</span> t <span style="color:#3b6ac8">SET</span> n <span style="color:#323232">=</span> n <span style="color:#323232">+</span> <span style="color:#1094a0">1</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R2"><pre class="R2">
+UPDATE 1
+</pre></div>
+<p class="C">
+А второй пытается изменить ту же строку и блокируется:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff; ">postgres$ <span style="color:#00a150">psql</span> <span style="color:#323232">-</span>d admin_monitoring
+</pre>
+</div>
+<div class="S3">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">UPDATE</span> t <span style="color:#3b6ac8">SET</span> n <span style="color:#323232">=</span> n <span style="color:#323232">+</span> <span style="color:#1094a0">2</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Посмотрим информацию об обслуживающих процессах:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> pid<span style="color:#323232">,</span> <span style="color:#3b6ac8">query</span><span style="color:#323232">,</span> state<span style="color:#323232">,</span> wait_event<span style="color:#323232">,</span> wait_event_type<span style="color:#323232">,</span> <span style="color:#c73a69">pg_blocking_pids</span><span style="color:#323232">(</span>pid<span style="color:#323232">)</span>
+<span style="color:#3b6ac8">FROM</span> pg_stat_activity
+<span style="color:#3b6ac8">WHERE</span> backend_type <span style="color:#323232">=</span> <span style="color:#1094a0">'client backend'</span> <span style="color:#00a150">\gx</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+-[ RECORD 1 ]----+-----------------------------------------------------------------------------
+pid              | 30562
+query            | UPDATE t SET n = n + 1;
+state            | idle in transaction
+wait_event       | ClientRead
+wait_event_type  | Client
+pg_blocking_pids | {}
+-[ RECORD 2 ]----+-----------------------------------------------------------------------------
+pid              | 30022
+query            | SELECT pid, query, state, wait_event, wait_event_type, pg_blocking_pids(pid)+
+                 | FROM pg_stat_activity                                                       +
+                 | WHERE backend_type = 'client backend' 
+state            | active
+wait_event       | 
+wait_event_type  | 
+pg_blocking_pids | {}
+-[ RECORD 3 ]----+-----------------------------------------------------------------------------
+pid              | 30614
+query            | UPDATE t SET n = n + 2;
+state            | active
+wait_event       | transactionid
+wait_event_type  | Lock
+pg_blocking_pids | {30562}
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Cостояние idle in transaction означает, что сеанс начал транзакцию, но в
+настоящее время ничего не делает, а транзакция осталась незавершенной. Это
+может стать проблемой, если ситуация возникает систематически, например,
+из-за некорректной реализации приложения или из-за ошибок в драйвере -
+поскольку открытый сеанс расходует оперативную память.
+</p>
+<p class="C">
+Начиная с версии 9.6 в арсенале администратора появился параметр:
+</p>
+<ul class="U">
+<li>idle_in_transaction_session_timeout - принудительно завершает сеансы, в которых транзакция простаивает больше указанного времени.</li>
+</ul>
+<p class="C">
+А мы покажем, как завершить блокирующий сеанс вручную. Сначала запомним
+номер заблокированного процесса:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> pid <span style="color:#3b6ac8">as</span> blocked_pid
+<span style="color:#3b6ac8">FROM</span> pg_stat_activity
+<span style="color:#3b6ac8">WHERE</span> backend_type <span style="color:#323232">=</span> <span style="color:#1094a0">'client backend'</span>
+<span style="color:#3b6ac8">AND</span> <span style="color:#c73a69">cardinality</span><span style="color:#323232">(</span><span style="color:#c73a69">pg_blocking_pids</span><span style="color:#323232">(</span>pid<span style="color:#323232">)) &gt;</span> <span style="color:#1094a0">0</span> <span style="color:#00a150">\gset</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+В PostgreSQL версий ниже 9.6 нет функции pg_blocking_pids, но блокирующий
+процесс можно вычислить, используя запросы к таблице блокировок. Запрос
+покажет две строки: одна транзакция получила блокировку (granted), другая -
+нет и ожидает.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> locktype<span style="color:#323232">,</span> transactionid<span style="color:#323232">,</span> pid<span style="color:#323232">,</span> <span style="color:#3b6ac8">mode</span><span style="color:#323232">,</span> <span style="color:#3b6ac8">granted</span>
+<span style="color:#3b6ac8">FROM</span> pg_locks
+<span style="color:#3b6ac8">WHERE</span> transactionid <span style="color:#3b6ac8">IN</span> <span style="color:#323232">(</span>
+  <span style="color:#3b6ac8">SELECT</span> transactionid <span style="color:#3b6ac8">FROM</span> pg_locks <span style="color:#3b6ac8">WHERE</span> pid <span style="color:#323232">=</span> <span style="color:#00a150">:blocked_pid</span> <span style="color:#3b6ac8">AND NOT granted</span>
+<span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+   locktype    | transactionid |  pid  |     mode      | granted 
+---------------+---------------+-------+---------------+---------
+ transactionid |          9929 | 30562 | ExclusiveLock | t
+ transactionid |          9929 | 30614 | ShareLock     | f
+(2 rows)
+
+</pre></div>
+<p class="C">
+В общем случае нужно аккуратно учитывать тип блокировки.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Выполнение запроса можно прервать функцией pg_cancel_backend. В нашем
+случае транзакция простаивает, так что просто прерываем сеанс, вызвав
+pg_terminate_backend:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">pg_terminate_backend</span><span style="color:#323232">(</span>b.pid<span style="color:#323232">)</span>
+<span style="color:#3b6ac8">FROM</span> <span style="color:#c73a69">unnest</span><span style="color:#323232">(</span><span style="color:#c73a69">pg_blocking_pids</span><span style="color:#323232">(</span><span style="color:#00a150">:blocked_pid</span><span style="color:#323232">))</span> <span style="color:#3b6ac8">AS</span> <span style="color:#c73a69">b</span><span style="color:#323232">(</span>pid<span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ pg_terminate_backend 
+----------------------
+ t
+(1 row)
+
+</pre></div>
+<p class="C">
+Функция unnest нужна, поскольку pg_blocking_pids возвращает массив
+идентификаторов процессов, блокирующих искомый серверный процесс. В нашем
+примере блокирующий процесс один, но в общем случае их может быть несколько.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Проверим состояние серверных процессов.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> pid<span style="color:#323232">,</span> <span style="color:#3b6ac8">query</span><span style="color:#323232">,</span> state<span style="color:#323232">,</span> wait_event<span style="color:#323232">,</span> wait_event_type
+<span style="color:#3b6ac8">FROM</span> pg_stat_activity
+<span style="color:#3b6ac8">WHERE</span> backend_type <span style="color:#323232">=</span> <span style="color:#1094a0">'client backend'</span> <span style="color:#00a150">\gx</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+-[ RECORD 1 ]---+------------------------------------------------------
+pid             | 30022
+query           | SELECT pid, query, state, wait_event, wait_event_type+
+                | FROM pg_stat_activity                                +
+                | WHERE backend_type = 'client backend' 
+state           | active
+wait_event      | 
+wait_event_type | 
+-[ RECORD 2 ]---+------------------------------------------------------
+pid             | 30614
+query           | UPDATE t SET n = n + 2;
+state           | idle
+wait_event      | ClientRead
+wait_event_type | Client
+
+</pre></div>
+<p class="C">
+Осталось только два, причем заблокированный успешно завершил транзакцию.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Начиная с версии 10 представление pg_stat_activity показывает информацию
+не только про обслуживающие процессы, но и про служебные фоновые процессы
+экземпляра:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> pid<span style="color:#323232">,</span> backend_type<span style="color:#323232">,</span> backend_start<span style="color:#323232">,</span> state
+<span style="color:#3b6ac8">FROM</span> pg_stat_activity<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+  pid  |    backend_type     |         backend_start         | state  
+-------+---------------------+-------------------------------+--------
+ 22616 | background worker   | 2019-03-31 15:25:22.337945+03 | 
+ 22614 | autovacuum launcher | 2019-03-31 15:25:22.339051+03 | 
+ 30022 | client backend      | 2019-03-31 15:25:42.252197+03 | active
+ 30614 | client backend      | 2019-03-31 15:25:54.465374+03 | idle
+ 22612 | background writer   | 2019-03-31 15:25:22.340118+03 | 
+ 22611 | checkpointer        | 2019-03-31 15:25:22.340522+03 | 
+ 22613 | walwriter           | 2019-03-31 15:25:22.339701+03 | 
+(7 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Сравним с тем, что показывает операционная система:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">ps</span> <span style="color:#323232">-</span>o pid<span style="color:#323232">,</span>command <span style="color:#323232">--</span>ppid <span style="color:#1094a0">`head -n 1</span> <span style="color:#7376c4">$PGDATA</span><span style="color:#1094a0">/postmaster.pid`</span>
+</pre>
+</div>
+<div class="R"><pre class="R">
+  PID COMMAND
+22611 postgres: checkpointer process   
+22612 postgres: writer process   
+22613 postgres: wal writer process   
+22614 postgres: autovacuum launcher process   
+22615 postgres: stats collector process   
+22616 postgres: bgworker: logical replication launcher   
+30022 postgres: postgres admin_monitoring [local] idle
+30614 postgres: postgres admin_monitoring [local] idle
+</pre></div>
+<p class="C">
+Можно заметить, что в pg_stat_activity не попадает процесс stats collector.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Анализ журнала
+</h1>
+<p class="C">
+Посмотрим самый простой случай. Например, нас интересуют сообщения FATAL:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">grep</span> FATAL <span style="color:#323232">/</span>home<span style="color:#323232">/</span>postgres<span style="color:#323232">/</span>logfile | <span style="color:#3b6ac8">tail</span> <span style="color:#323232">-</span>n <span style="color:#1094a0">10</span>
+</pre>
+</div>
+<div class="R"><pre class="R">
+2019-03-31 15:24:53.802 MSK [16551] FATAL:  terminating logical replication worker due to administrator command
+2019-03-31 15:25:24.354 MSK [23709] FATAL:  lock file &quot;postmaster.pid&quot; already exists
+2019-03-31 15:25:27.582 MSK [24944] FATAL:  lock file &quot;postmaster.pid&quot; already exists
+2019-03-31 15:25:29.020 MSK [25547] FATAL:  lock file &quot;postmaster.pid&quot; already exists
+2019-03-31 15:25:29.953 MSK [25838] FATAL:  lock file &quot;postmaster.pid&quot; already exists
+2019-03-31 15:25:33.326 MSK [27301] FATAL:  lock file &quot;postmaster.pid&quot; already exists
+2019-03-31 15:25:35.305 MSK [28143] FATAL:  lock file &quot;postmaster.pid&quot; already exists
+2019-03-31 15:25:38.027 MSK [28969] FATAL:  lock file &quot;postmaster.pid&quot; already exists
+2019-03-31 15:25:41.015 MSK [29832] FATAL:  lock file &quot;postmaster.pid&quot; already exists
+2019-03-31 15:25:54.769 MSK [30562] FATAL:  terminating connection due to administrator command
+</pre></div>
+<p class="C">
+Сообщение "terminating connection" вызвано тем, что мы завершали блокирующий
+процесс.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Обычное применение журнала - анализ наиболее продолжительных запросов. Добавим
+к строкам журнала номер процесса и включим вывод команд и времени их
+выполнения:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER SYSTEM SET</span> log_min_duration_statement<span style="color:#323232">=</span><span style="color:#1094a0">0</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER SYSTEM
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER SYSTEM SET</span> log_line_prefix<span style="color:#323232">=</span><span style="color:#1094a0">'(pid=%p) '</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER SYSTEM
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">pg_reload_conf</span><span style="color:#323232">();</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ pg_reload_conf 
+----------------
+ t
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Теперь выполним какую-нибудь команду:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">sum</span><span style="color:#323232">(</span><span style="color:#c73a69">random</span><span style="color:#323232">())</span> <span style="color:#3b6ac8">FROM</span> <span style="color:#c73a69">generate_series</span><span style="color:#323232">(</span><span style="color:#1094a0">1</span><span style="color:#323232">,</span><span style="color:#1094a0">1000000</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+       sum        
+------------------
+ 500182.961182054
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+И посмотрим журнал:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">tail</span> <span style="color:#323232">-</span>n <span style="color:#1094a0">1</span> <span style="color:#323232">/</span>home<span style="color:#323232">/</span>postgres<span style="color:#323232">/</span>logfile
+</pre>
+</div>
+<div class="R"><pre class="R">
+(pid=30022) LOG:  duration: 364.589 ms  statement: SELECT sum(random()) FROM generate_series(1,1000000);
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Конец демонстрации.
+</p>
+</body>
+</html>

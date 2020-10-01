@@ -1,0 +1,11 @@
+﻿https://chocolatey.org/
+
+1. Installing Chocolatey.
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+
+
+2. Upgrading Chocolatey.
+choco upgrade chocolatey
+
+
+

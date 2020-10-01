@@ -1,0 +1,58 @@
+# Create main vagrant folder, for example vagrant
+cd M:\Programs\workspace\manuals\vagrant
+
+# How to use box - ubuntu/xenial64
+# https://app.vagrantup.com/ubuntu/boxes/xenial64
+vagrant init ubuntu/xenial64
+vagrant up
+
+# After vagrant finished download image need to open Vagrant file
+???# uncomment 26 line - config.vm.network "forwarded_port", guest: 80, host: 8080
+???# change ports, example - guest: 8000, host: 8001
+
+# Next Vagrant file settings
+# uncomment 46 line (shared folder) - config.vm.synced_folder "../data", "/vagrant_data"
+config.vm.synced_folder "M:/Programs/workspace/manuals/vagrant/projects", "/var/www"
+
+# Restart vagrant
+vagrant reload
+
+# How to connect VM
+vagrant ssh
+
+# Better to use putty
+cd C:\ProgramData\Microsoft\Windows\Start Menu\Programs\PuTTY (64-bit)
+# Open PuTTYgen
+# load
+# move to your vagrant folder M:\Programs\workspace\manuals\vagrant\.vagrant\machines\default\virtualbox
+# choose "All Files" > private_key
+# Save private key > M:\Programs\workspace\manuals\vagrant > vagrant
+
+# Open putty
+ip - 127.0.0.1
+port - 2222
+# Connection > SSH > Auth > Browse > vagrant.ppk
+
+# To stop VM
+vagrant halt
+
+# To shut down forcefully
+vagrant suspend
+
+# To start
+vagrant up
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,30 @@
+"*":
+  "atom-runner": {}
+  "autocomplete-python":
+    showDescriptions: false
+    useKite: false
+  core:
+    disabledPackages: [
+      "spell-check"
+      "pigments"
+    ]
+    telemetryConsent: "no"
+    uriHandlerRegistration: "always"
+  editor:
+    fontSize: 17
+    scrollPastEnd: true
+    showIndentGuide: true
+    softWrap: true
+    tabLength: 4
+  "exception-reporting":
+    userId: "ca5f6528-ead2-4c43-8086-15e8e30e5301"
+  "linter-ui-default":
+    showPanel: true
+  runner:
+    scopes:
+      python: "python3"
+  "tree-view":
+    hideIgnoredNames: true
+    hideVcsIgnoredFiles: true
+  welcome:
+    showOnStartup: false

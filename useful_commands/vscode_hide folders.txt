@@ -1,0 +1,8 @@
+Hide folders in Visual Studio Code Explorer
+
+    Press F1.
+    Type settings.
+    Select Open Workspace Settings.
+    On the right side type files.exclude and press Enter.
+    Add additional entries and save the file.
+    Enjoy your new clean Explorer.

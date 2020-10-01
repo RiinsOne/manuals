@@ -1,0 +1,429 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF8">
+<style>
+p.c    { }
+h1     { font-size: 160%; font-weight: bold; padding-top: 1ex; padding-bottom: 1ex; }
+div.s1 { margin-left: 20px; padding-left: 10px; font-weight: bold; }
+div.s2 { margin-left: 80px; padding-left: 10px; font-weight: bold; }
+div.s3 { margin-left: 140px; padding-left: 10px; font-weight: bold; }
+div.r1 { margin-left: 20px; padding-left: 10px; }
+div.r2 { margin-left: 80px; padding-left: 10px; }
+div.r3 { margin-left: 140px; padding-left: 10px; }
+div.e  { margin-left: 20px; padding-left: 10px; font-weight: bold; <!--color: darkblue;--> }
+div.r  { margin-left: 20px; padding-left: 10px; <!--color: darkblue;--> }
+</style>
+</head>
+<body>
+<h1>
+Служебные табличные пространства
+</h1>
+<p class="C">
+При создании кластера создаются два табличных пространства:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_tablespace<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+  spcname   | spcowner | spcacl | spcoptions 
+------------+----------+--------+------------
+ pg_default |       10 |        | 
+ pg_global  |       10 |        | 
+(2 rows)
+
+</pre></div>
+<ul class="U">
+<li>pg_global  - общие объекты кластера,</li>
+<li>pg_default - табличное пространство по умолчанию.</li>
+</ul>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Пользовательские табличные пространства
+</h1>
+<p class="C">
+Для нового табличного пространства нужен пустой каталог, владельцем которого
+является пользователь postgres.
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">cd</span> <span style="color:#323232">/</span>home<span style="color:#323232">/</span>postgres
+</pre>
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">mkdir</span> ts_dir
+</pre>
+</div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Теперь можно создать табличное пространство:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE TABLESPACE</span> ts <span style="color:#3b6ac8">LOCATION</span> <span style="color:#1094a0">'/home/postgres/ts_dir'</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE TABLESPACE
+</pre></div>
+<p class="C">
+Список табличных пространств можно получить и командой psql:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\db</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+              List of tablespaces
+    Name    |  Owner   |       Location        
+------------+----------+-----------------------
+ pg_default | postgres | 
+ pg_global  | postgres | 
+ ts         | postgres | /home/postgres/ts_dir
+(3 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+У каждой базы данных есть табличное пространство "по умолчанию".
+</p>
+<p class="C">
+Создадим БД и назначим ей ts в качестве такого пространства:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE DATABASE</span> appdb <span style="color:#3b6ac8">TABLESPACE</span> ts<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE DATABASE
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Теперь все создаваемые таблицы и индексы будут попадать в ts, если явно не
+указать другое.
+</p>
+<p class="C">
+Подключимся к базе:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> appdb
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;appdb&quot; as user &quot;postgres&quot;.
+</pre></div>
+<p class="C">
+Создадим таблицу:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE TABLE</span> <span style="color:#c73a69">t1</span><span style="color:#323232">(</span>id <span style="color:#a00050">serial</span><span style="color:#323232">,</span> name <span style="color:#a00050">text</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE TABLE
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+При создании объекта табличное пространство можно указать явно:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE TABLE</span> <span style="color:#c73a69">t2</span><span style="color:#323232">(</span>n <span style="color:#a00050">numeric</span><span style="color:#323232">)</span> <span style="color:#3b6ac8">TABLESPACE</span> pg_default<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE TABLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> tablename<span style="color:#323232">,</span> <span style="color:#3b6ac8">tablespace FROM</span> pg_tables <span style="color:#3b6ac8">WHERE</span> schemaname <span style="color:#323232">=</span> <span style="color:#1094a0">'public'</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ tablename | tablespace 
+-----------+------------
+ t1        | 
+ t2        | pg_default
+(2 rows)
+
+</pre></div>
+<p class="C">
+Пустое поле tablespace указывает на табличное пространство по умолчанию,
+а у второй таблицы поле заполнено.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Одно табличное пространство может использоваться для объектов нескольких
+баз данных.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE DATABASE</span> configdb<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE DATABASE
+</pre></div>
+<p class="C">
+У этой БД табличным пространством по умолчанию будет pg_default.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> configdb
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;configdb&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE TABLE</span> <span style="color:#c73a69">t</span><span style="color:#323232">(</span>n <span style="color:#a00050">integer</span><span style="color:#323232">)</span> <span style="color:#3b6ac8">TABLESPACE</span> ts<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE TABLE
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Управление объектами в табличных пространствах
+</h1>
+<p class="C">
+Таблицы (и другие объекты, например, индексы), можно перемещать между
+табличными пространствами.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> appdb
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;appdb&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER TABLE</span> t1 <span style="color:#3b6ac8">SET TABLESPACE</span> pg_default<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER TABLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> tablename<span style="color:#323232">,</span> <span style="color:#3b6ac8">tablespace FROM</span> pg_tables <span style="color:#3b6ac8">WHERE</span> schemaname <span style="color:#323232">=</span> <span style="color:#1094a0">'public'</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ tablename | tablespace 
+-----------+------------
+ t2        | pg_default
+ t1        | pg_default
+(2 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Можно переместить и все объекты из одного табличного пространства в другое:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER TABLE ALL IN TABLESPACE</span> pg_default <span style="color:#3b6ac8">SET TABLESPACE</span> ts<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER TABLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> tablename<span style="color:#323232">,</span> <span style="color:#3b6ac8">tablespace FROM</span> pg_tables <span style="color:#3b6ac8">WHERE</span> schemaname <span style="color:#323232">=</span> <span style="color:#1094a0">'public'</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ tablename | tablespace 
+-----------+------------
+ t2        | 
+ t1        | 
+(2 rows)
+
+</pre></div>
+<p class="C">
+Важно понимать, что перенос в другое табличное пространство (в отличие от
+переноса в другую схему) - физическая операция, связанная с копированием
+файлов данных из каталога в каталог. На время ее выполнения перемещаемый
+объект полностью блокируется.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Размер табличного пространства
+</h1>
+<p class="C">
+Мы уже рассматривали, как узнать объем, занимаемый базой данных. Объем можно
+посмотреть и в разрезе табличных пространств:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">pg_size_pretty</span><span style="color:#323232">(</span> <span style="color:#c73a69">pg_tablespace_size</span><span style="color:#323232">(</span><span style="color:#1094a0">'ts'</span><span style="color:#323232">) );</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ pg_size_pretty 
+----------------
+ 7134 kB
+(1 row)
+
+</pre></div>
+<p class="C">
+Почему такой размер, если в табличном пространстве всего несколько пустых
+таблиц?
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Поскольку ts является табличным пространством по умолчанию для базы appdb,
+в нем хранятся объекты системного каталога. Они и занимают место.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Удаление табличного пространства
+</h1>
+<p class="C">
+Табличное пространство можно удалить, но только в том случае, если оно пусто.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">DROP TABLESPACE</span> ts<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ERROR:  tablespace &quot;ts&quot; is not empty
+</pre></div>
+<p class="C">
+В отличие от удаления схемы, в команде DROP TABLESPACE нельзя использовать
+фразу CASCADE: объекты табличного пространства могут принадлежать разным
+базам данных, а подключены мы только к одной.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Но можно выяснить, в каких базах есть зависимые объекты. В этом нам поможет
+системный каталог.
+</p>
+<p class="C">
+Сначала узнаем и запомним OID табличного пространства:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#a00050">OID</span> <span style="color:#3b6ac8">FROM</span> pg_tablespace <span style="color:#3b6ac8">WHERE</span> spcname <span style="color:#323232">=</span> <span style="color:#1094a0">'ts'</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+  oid  
+-------
+ 16469
+(1 row)
+
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#a00050">OID</span> <span style="color:#3b6ac8">AS</span> tsoid <span style="color:#3b6ac8">FROM</span> pg_tablespace <span style="color:#3b6ac8">WHERE</span> spcname <span style="color:#323232">=</span> <span style="color:#1094a0">'ts'</span> <span style="color:#00a150">\gset</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Затем получим список баз данных, в которых есть объекты из удаляемого
+пространства:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> datname
+<span style="color:#3b6ac8">FROM</span> pg_database
+<span style="color:#3b6ac8">WHERE</span> <span style="color:#a00050">OID</span> <span style="color:#3b6ac8">IN</span> <span style="color:#323232">(</span><span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">pg_tablespace_databases</span><span style="color:#323232">(</span><span style="color:#00a150">:tsoid</span><span style="color:#323232">));</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ datname  
+----------
+ configdb
+ appdb
+(2 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Дальше подключаемся к каждой базе данных и получаем список объектов из
+pg_class:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> configdb
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;configdb&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> relnamespace<span style="color:#323232">::</span><span style="color:#a00050">regnamespace</span><span style="color:#323232">,</span> relname<span style="color:#323232">,</span> relkind
+<span style="color:#3b6ac8">FROM</span> pg_class
+<span style="color:#3b6ac8">WHERE</span> reltablespace <span style="color:#323232">=</span> <span style="color:#00a150">:tsoid</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ relnamespace | relname | relkind 
+--------------+---------+---------
+ public       | t       | r
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Таблица больше не нужна, удалим ее.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">DROP TABLE</span> t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+DROP TABLE
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+И вторая база данных. Но, поскольку ts является табличным пространством по
+умолчанию, у объектов в pg_class поле содержит ноль:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> appdb
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;appdb&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#c73a69">count</span><span style="color:#323232">(*)</span> <span style="color:#3b6ac8">FROM</span> pg_class <span style="color:#3b6ac8">WHERE</span> reltablespace <span style="color:#323232">=</span> <span style="color:#1094a0">0</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ count 
+-------
+   313
+(1 row)
+
+</pre></div>
+<p class="C">
+Это, как нам уже известно, объекты системного каталога.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Табличное пространство по умолчанию можно сменить; при этом все таблицы
+из старого пространства физически переносятся в новое. Предварительно надо
+отключиться от базы.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> postgres
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;postgres&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER DATABASE</span> appdb <span style="color:#3b6ac8">SET TABLESPACE</span> pg_default<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER DATABASE
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Вот теперь табличное пространство может быть удалено.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">DROP TABLESPACE</span> ts<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+DROP TABLESPACE
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Конец демонстрации.
+</p>
+</body>
+</html>

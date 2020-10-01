@@ -1,0 +1,8 @@
+# scripts and profiles
+C:\Users\Orkhan\Documents\WindowsPowerShell\profile.ps1
+	
+	# https://blogs.msdn.microsoft.com/luisdem/2016/08/01/changing-the-cursor-of-powershell-and-command-prompt/
+
+	# type from a new line
+	function Prompt { "$( ( get-item $pwd ))`n>" }
+

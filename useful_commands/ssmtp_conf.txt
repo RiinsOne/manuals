@@ -1,0 +1,91 @@
+https://wiki.archlinux.org/index.php/SSMTP
+
+/etc/ssmtp/ssmtp.conf
+
+# The user that gets all the mails (UID < 1000, usually the admin)
+root=username@gmail.com
+
+# The mail server (where the mail is sent to), both port 465 or 587 should be acceptable
+# See also https://support.google.com/mail/answer/78799
+mailhub=smtp.gmail.com:587
+
+# The address where the mail appears to come from for user authentication.
+rewriteDomain=gmail.com
+
+# The full hostname.  Must be correctly formed, fully qualified domain name or GMail will reject connection.
+hostname=yourlocalhost.yourlocaldomain.tld
+
+# Use SSL/TLS before starting negotiation
+UseTLS=Yes
+UseSTARTTLS=Yes
+
+# Username/Password
+AuthUser=username
+AuthPass=password
+AuthMethod=LOGIN
+
+# Email 'From header's can override the default domain?
+FromLineOverride=yes
+
+
+
+
+Create aliases for local usernames (optional)
+
+/etc/ssmtp/revaliases
+root:username@gmail.com:smtp.gmail.com:587
+mainuser:username@gmail.com:smtp.gmail.com:587
+
+
+
+To test whether the Gmail server will properly forward your email:
+
+$ echo -n 'Subject: test\n\nTesting ssmtp' | sendmail -v tousername@example.com
+
+
+
+
+Change the 'From' text by editing /etc/passwd to receive mail from 'root at myhost' instead of just 'root'.
+
+# chfn -f 'root at myhost' root
+# chfn -f 'mainuser at myhost' mainuser
+
+
+
+Which changes /etc/passwd to:
+
+$ grep myhost /etc/passwd
+root:x:0:0:root at myhost,,,:/root:/bin/bash
+mainuser:x:1000:1000:mainuser at myhost,,,:/home/mainuser:/bin/bash
+
+
+
+Sending email
+To send email from the terminal, do:
+
+$ echo -e "Subject: this is the subject\n\nthis is the body" | mail user@example.com
+or interactively as:
+
+$ sendmail username@example.com
+Subject: this is my subject
+CC: optional@example.com
+
+Now I can type the body here
+
+
+
+
+Attachments
+If you need to be able to add attachments, install and configure Mutt and Msmtp and then go see the tip at nixcraft.
+
+Alternatively, you can attach using uuencode from sharutils. To attach 'file.txt' as 'myfile.txt':
+
+$ uuencode file.txt myfile.txt | sendmail user@example.com
+
+
+
+
+
+
+
+

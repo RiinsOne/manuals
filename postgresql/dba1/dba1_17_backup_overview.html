@@ -1,0 +1,472 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF8">
+<style>
+p.c    { }
+h1     { font-size: 160%; font-weight: bold; padding-top: 1ex; padding-bottom: 1ex; }
+div.s1 { margin-left: 20px; padding-left: 10px; font-weight: bold; }
+div.s2 { margin-left: 80px; padding-left: 10px; font-weight: bold; }
+div.s3 { margin-left: 140px; padding-left: 10px; font-weight: bold; }
+div.r1 { margin-left: 20px; padding-left: 10px; }
+div.r2 { margin-left: 80px; padding-left: 10px; }
+div.r3 { margin-left: 140px; padding-left: 10px; }
+div.e  { margin-left: 20px; padding-left: 10px; font-weight: bold; <!--color: darkblue;--> }
+div.r  { margin-left: 20px; padding-left: 10px; <!--color: darkblue;--> }
+</style>
+</head>
+<body>
+<h1>
+copy
+</h1>
+<p class="C">
+Создадим базу данных и таблицу в ней.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE DATABASE</span> backup_overview<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE DATABASE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> backup_overview
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;backup_overview&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE TABLE</span> <span style="color:#c73a69">t</span><span style="color:#323232">(</span>id <span style="color:#a00050">numeric</span><span style="color:#323232">,</span> s <span style="color:#a00050">text</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE TABLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> t <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">1</span><span style="color:#323232">,</span> <span style="color:#1094a0">'Привет!'</span><span style="color:#323232">), (</span><span style="color:#1094a0">2</span><span style="color:#323232">,</span> <span style="color:#1094a0">''</span><span style="color:#323232">), (</span><span style="color:#1094a0">3</span><span style="color:#323232">,</span> <span style="color:#3b6ac8">NULL</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+INSERT 0 3
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ id |    s    
+----+---------
+  1 | &#1055;&#1088;&#1080;&#1074;&#1077;&#1090;!
+  2 | 
+  3 | 
+(3 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Вот как выглядит таблица в выводе команды COPY:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">COPY</span> t <span style="color:#3b6ac8">TO stdout</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+1	&#1055;&#1088;&#1080;&#1074;&#1077;&#1090;!
+2	
+3	\N
+</pre></div>
+<p class="C">
+Обратим внимание на то, что пустая строка и NULL - разные значения, хотя,
+выполняя запрос, этого и не заметно.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Аналогично можно вводить данные:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">TRUNCATE TABLE</span> t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+TRUNCATE TABLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">COPY</span> t <span style="color:#3b6ac8">FROM STDIN</span><span style="color:#323232">;</span>
+<span style="color:#1094a0">1</span>	Hi there<span style="color:#323232">!</span>
+<span style="color:#1094a0">2</span>	
+<span style="color:#1094a0">3</span>	<span style="color:#00a150">\N</span>
+\.
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+COPY 3
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Проверим:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ id |     s     
+----+-----------
+  1 | Hi there!
+  2 | 
+  3 | 
+(3 rows)
+
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">COPY</span> t <span style="color:#3b6ac8">TO stdout</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+1	Hi there!
+2	
+3	\N
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+pg_dump
+</h1>
+<p class="C">
+Посмотрим на результат работы утилиты pg_dump в простом формате
+(plain). Обратите внимание на то, в каком виде сохранены данные из таблицы.
+</p>
+<p class="C">
+Если в шаблон template1 вносились какие-либо изменения, они также попадут
+в резервную копию. Поэтому при восстановлении базы данных имеет смысл
+предварительно создать ее из шаблона template0 (указанный ключ --create
+добавляет нужные команды автоматически).
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#00a150">pg_dump</span> <span style="color:#323232">-</span>d backup_overview <span style="color:#323232">--</span>create
+</pre>
+</div>
+<div class="R"><pre class="R">
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 10.0
+-- Dumped by pg_dump version 10.0
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: backup_overview; Type: DATABASE; Schema: -; Owner: postgres
+--
+
+CREATE DATABASE backup_overview WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8';
+
+
+ALTER DATABASE backup_overview OWNER TO postgres;
+
+\connect backup_overview
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET search_path = public, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: t; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE t (
+    id numeric,
+    s text
+);
+
+
+ALTER TABLE t OWNER TO postgres;
+
+--
+-- Data for Name: t; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY t (id, s) FROM stdin;
+1	Hi there!
+2	
+3	\N
+\.
+
+
+--
+-- PostgreSQL database dump complete
+--
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+В качестве примера использования скопируем таблицу в другую базу.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE DATABASE</span> backup_overview2<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE DATABASE
+</pre></div>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#00a150">pg_dump</span> <span style="color:#323232">-</span>d backup_overview <span style="color:#323232">--</span>table<span style="color:#323232">=</span>t | <span style="color:#00a150">psql</span> <span style="color:#323232">-</span>d backup_overview2
+</pre>
+</div>
+<div class="R"><pre class="R">
+SET
+SET
+SET
+SET
+SET
+SET
+SET
+SET
+SET
+SET
+SET
+CREATE TABLE
+ALTER TABLE
+COPY 3
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff; ">postgres$ <span style="color:#00a150">psql</span> <span style="color:#323232">-</span>d backup_overview2
+</pre>
+</div>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R4"><pre class="R4">
+ id |     s     
+----+-----------
+  1 | Hi there!
+  2 | 
+  3 | 
+(3 rows)
+
+</pre></div>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\q</span>
+</pre>
+</div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Автономная резервная копия
+</h1>
+<p class="C">
+В PostgreSQL 10 значения параметров по умолчанию позволяют использовать
+репликацию:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> name<span style="color:#323232">,</span> setting
+<span style="color:#3b6ac8">FROM</span> pg_settings
+<span style="color:#3b6ac8">WHERE</span> name <span style="color:#3b6ac8">IN</span> <span style="color:#323232">(</span><span style="color:#1094a0">'wal_level'</span><span style="color:#323232">,</span><span style="color:#1094a0">'max_wal_senders'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+      name       | setting 
+-----------------+---------
+ max_wal_senders | 10
+ wal_level       | replica
+(2 rows)
+
+</pre></div>
+<p class="C">
+В более ранних версиях аналогичные значения пришлось бы установить
+самостоятельно.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Разрешение на локальное подключение по протоколу репликации в pg_hba.conf
+также прописано по умолчанию, начиная с версии 10:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT type</span><span style="color:#323232">,</span> <span style="color:#3b6ac8">database</span><span style="color:#323232">,</span> user_name<span style="color:#323232">,</span> address<span style="color:#323232">,</span> auth_method 
+<span style="color:#3b6ac8">FROM</span> <span style="color:#c73a69">pg_hba_file_rules</span><span style="color:#323232">()</span> 
+<span style="color:#3b6ac8">WHERE database</span> <span style="color:#323232">=</span> <span style="color:#1094a0">'{replication}'</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ type  |   database    | user_name |  address  | auth_method 
+-------+---------------+-----------+-----------+-------------
+ local | {replication} | {all}     |           | trust
+ host  | {replication} | {all}     | 127.0.0.1 | trust
+ host  | {replication} | {all}     | ::1       | trust
+(3 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Выполним команду pg_basebackup. Используем формат по умолчанию (plain),
+в качестве каталога для сохранения сразу используем PGDATA резервного сервера.
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">rm</span> <span style="color:#323232">-</span>rf <span style="color:#323232">/</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql2<span style="color:#323232">/</span>data<span style="color:#323232">/*</span>
+</pre>
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#00a150">pg_basebackup</span> <span style="color:#323232">--</span>pgdata<span style="color:#323232">=/</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql2<span style="color:#323232">/</span>data
+</pre>
+</div>
+<p class="C">
+Резервный сервер уже предварительно собран и установлен.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Проверим содержимое каталога:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">ls</span> <span style="color:#323232">-</span>l <span style="color:#323232">/</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql2<span style="color:#323232">/</span>data
+</pre>
+</div>
+<div class="R"><pre class="R">
+total 116
+-rw------- 1 postgres postgres   206 &#1084;&#1072;&#1088; 31 15:26 backup_label
+drwx------ 7 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 base
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 global
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_commit_ts
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_dynshmem
+-rw------- 1 postgres postgres  4513 &#1084;&#1072;&#1088; 31 15:26 pg_hba.conf
+-rw------- 1 postgres postgres  1636 &#1084;&#1072;&#1088; 31 15:26 pg_ident.conf
+drwx------ 4 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_logical
+drwx------ 4 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_multixact
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_notify
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_replslot
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_serial
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_snapshots
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_stat
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_stat_tmp
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_subtrans
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_tblspc
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_twophase
+-rw------- 1 postgres postgres     3 &#1084;&#1072;&#1088; 31 15:26 PG_VERSION
+drwx------ 3 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_wal
+drwx------ 2 postgres postgres  4096 &#1084;&#1072;&#1088; 31 15:26 pg_xact
+-rw------- 1 postgres postgres    84 &#1084;&#1072;&#1088; 31 15:26 postgresql.auto.conf
+-rw------- 1 postgres postgres 22766 &#1084;&#1072;&#1088; 31 15:26 postgresql.conf
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Восстановление из автономной резервной копии
+</h1>
+<p class="C">
+Мы собираемся запустить сервер вместе с основным, поэтому в настройках
+необходимо поменять порт. Сделаем это в файле postgresql.auto.conf:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">echo</span> <span style="color:#1094a0">'port = 5433'</span> <span style="color:#323232">&gt;&gt; /</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql2<span style="color:#323232">/</span>data<span style="color:#323232">/</span>postgresql.auto.conf
+</pre>
+</div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+И можно запускать сервер.
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#00a150">pg_ctl</span> <span style="color:#323232">-</span>w <span style="color:#323232">-</span>l <span style="color:#323232">/</span>home<span style="color:#323232">/</span>postgres<span style="color:#323232">/</span>logfile2 <span style="color:#323232">-</span>D <span style="color:#323232">/</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql2<span style="color:#323232">/</span>data start
+</pre>
+</div>
+<div class="R"><pre class="R">
+waiting for server to start.... done
+server started
+</pre></div>
+<p class="C">
+В приведенной команде мы явно указываем расположение каталога с данными
+кластера. Для удобства в виртуальной машине есть команды "1" и "2", которые
+переключают окружение на первый и на второй сервер соответственно.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Теперь оба сервера работают одновременно и независимо. Основной:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff; ">postgres$ <span style="color:#00a150">psql</span> <span style="color:#323232">-</span>p <span style="color:#1094a0">5432</span> <span style="color:#323232">-</span>d backup_overview
+</pre>
+</div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> t <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">4</span><span style="color:#323232">,</span> <span style="color:#1094a0">'Основной сервер'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+INSERT 0 1
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ id |        s        
+----+-----------------
+  1 | Hi there!
+  2 | 
+  3 | 
+  4 | &#1054;&#1089;&#1085;&#1086;&#1074;&#1085;&#1086;&#1081; &#1089;&#1077;&#1088;&#1074;&#1077;&#1088;
+(4 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Сервер, восстановленный из резервной копии:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff; ">postgres$ <span style="color:#00a150">psql</span> <span style="color:#323232">-</span>p <span style="color:#1094a0">5433</span> <span style="color:#323232">-</span>d backup_overview
+</pre>
+</div>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> t <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">4</span><span style="color:#323232">,</span> <span style="color:#1094a0">'Резервная копия'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R4"><pre class="R4">
+INSERT 0 1
+</pre></div>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> t<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R4"><pre class="R4">
+ id |        s        
+----+-----------------
+  1 | Hi there!
+  2 | 
+  3 | 
+  4 | &#1056;&#1077;&#1079;&#1077;&#1088;&#1074;&#1085;&#1072;&#1103; &#1082;&#1086;&#1087;&#1080;&#1103;
+(4 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Конец демонстрации.
+</p>
+</body>
+</html>

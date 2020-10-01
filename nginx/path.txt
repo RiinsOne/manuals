@@ -1,0 +1,23 @@
+# default pages
+/var/www/html
+
+# конфиги
+/etc/nginx/
+
+# defaul конфиг
+/etc/nginx/sites-enabled
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#

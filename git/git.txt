@@ -1,0 +1,45 @@
+﻿1. Setting name and email.
+
+git config --global user.name "Mona Lisa"
+git config --global user.email "mona@lisa.io"
+
+
+2. Initialization.
+
+git init (or git init <path to dir>)
+
+ls -force (to see hidden files wia PowerShell)
+
+3. Useful commands.
+
+git status
+git add
+git commit -m 'your comment'
+git config -L 				show your config
+type 'C:\Users\Orkhan\.gitconfig'	directory of gitconfig
+git log					history of all commits
+
+git log -1
+git log -1 -p				what have been done
+
+
+type nul > .gitignore (create file in PowerShell)
+
+ssh-keygen (generate ssh key in PowerShell)
+
+git remote add origin
+git push -u origin master
+
+git fetch - забирает данные с remote repo на локальный
+git merge - соединяет с локальным
+
+git pull = git fetch + get merge
+
+git push - отправить на remote repo
+
+
+
+
+
+
+

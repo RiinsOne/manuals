@@ -1,0 +1,70 @@
+# https://www.digitalocean.com/community/tutorials/how-to-set-up-django-with-postgres-nginx-and-gunicorn-on-ubuntu-18-04-ru
+
+1. Клонировать репозиторий.
+Установка всех необходимых зависимостей, библиотек, приложений и т.д.
+
+2. Установить PostgreSQL. Инструкция на офф сайте.
+# https://www.postgresql.org/download/linux/ubuntu/
+
+# проверить
+ps aux | grep postgres
+
+3.
+sudo -u postgres psql
+
+CREATE DATABASE myproject;
+CREATE USER myprojectuser WITH PASSWORD 'password';
+
+CREATE USER myprojectuser
+# или без пароля, но тогда пустая строка в settings.py - password
+# sudo vim/etc/postgresql/11/main/pg_hba.conf
+все local методы заменить на trust вместо peer
+# далее нужно перезагрузить постгрес сервер
+sudo service postgresql restart
+# и проверить
+# psql -U <username> <db_name>
+
+ALTER ROLE myprojectuser SET client_encoding TO 'utf8';
+ALTER ROLE myprojectuser SET default_transaction_isolation TO 'read committed';
+# нужно выбрать таймзону совпадающую с сервером
+ALTER ROLE myprojectuser SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE myproject TO myprojectuser;
+\q
+
+4. В настройках settings.py django надо db поменять на localhost/127.0.0.1.
+Любые изменения в коде - через git branch, соединяем с мастер, пушим и пулим уже на сервере.
+И проверим работу приложения джанго с базой postgresql.
+
+5.
+PYTHONPATH=
+
+6. Настройка gunicorn и systemd
+pip install gunicorn
+
+тут настройка systemd service.
+надо пересмотреть видео или инструкцию
+
+7. Настройка nginx
+
+тут конфиг nginx
+server {
+    listen 80;
+
+    # тут можно вписать как точные домен, так и IP-адрес
+    server_name 192.168.33.10;
+
+    location /static/ {
+        alias /home/www/<path to staticfiles folder>/;
+    }
+
+    location /admin/ {
+        include proxy_params;
+        proxy_pass http://unix:/home/www/run/<path to .socket file>
+    }
+}
+
+# после изменений в конфиге nginx
+sudo service nginx reload  # релоад не сбросить подключения, а рестарт сбросит
+
+8. Настройка статики
+python manage.py collectstatic

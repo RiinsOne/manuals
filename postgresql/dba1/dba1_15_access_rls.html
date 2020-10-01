@@ -1,0 +1,239 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF8">
+<style>
+p.c    { }
+h1     { font-size: 160%; font-weight: bold; padding-top: 1ex; padding-bottom: 1ex; }
+div.s1 { margin-left: 20px; padding-left: 10px; font-weight: bold; }
+div.s2 { margin-left: 80px; padding-left: 10px; font-weight: bold; }
+div.s3 { margin-left: 140px; padding-left: 10px; font-weight: bold; }
+div.r1 { margin-left: 20px; padding-left: 10px; }
+div.r2 { margin-left: 80px; padding-left: 10px; }
+div.r3 { margin-left: 140px; padding-left: 10px; }
+div.e  { margin-left: 20px; padding-left: 10px; font-weight: bold; <!--color: darkblue;--> }
+div.r  { margin-left: 20px; padding-left: 10px; <!--color: darkblue;--> }
+</style>
+</head>
+<body>
+<h1>
+Пример политики защиты строк
+</h1>
+<p class="C">
+Алиса и Боб работают в разных отделах одной компании.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">CREATE ROLE</span> alice <span style="color:#3b6ac8">LOGIN</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE ROLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">CREATE ROLE</span> bob <span style="color:#3b6ac8">LOGIN</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE ROLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">CREATE TABLE</span> <span style="color:#c73a69">users_depts</span><span style="color:#323232">(</span>
+    <span style="color:#3b6ac8">login</span> <span style="color:#a00050">text</span><span style="color:#323232">,</span>
+    department <span style="color:#a00050">text</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE TABLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">INSERT INTO</span> users_depts <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">'alice'</span><span style="color:#323232">,</span><span style="color:#1094a0">'PR'</span><span style="color:#323232">), (</span><span style="color:#1094a0">'bob'</span><span style="color:#323232">,</span><span style="color:#1094a0">'Sales'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+INSERT 0 2
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Они обращаются к одной таблице, содержащей информацию обо всех отделах. При
+этом и Алиса, и Боб должны видеть данные только своего отдела.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">CREATE TABLE</span> <span style="color:#c73a69">revenue</span><span style="color:#323232">(</span>
+    department <span style="color:#a00050">text</span><span style="color:#323232">,</span>
+    amount <span style="color:#a00050">numeric</span><span style="color:#323232">(</span><span style="color:#1094a0">10</span><span style="color:#323232">,</span><span style="color:#1094a0">2</span><span style="color:#323232">));</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE TABLE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">INSERT INTO</span> revenue <span style="color:#3b6ac8">SELECT</span> <span style="color:#1094a0">'PR'</span><span style="color:#323232">,   -</span><span style="color:#c73a69">random</span><span style="color:#323232">()*</span> <span style="color:#1094a0">100.00</span> <span style="color:#3b6ac8">FROM</span> <span style="color:#c73a69">generate_series</span><span style="color:#323232">(</span><span style="color:#1094a0">1</span><span style="color:#323232">,</span><span style="color:#1094a0">100000</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+INSERT 0 100000
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">INSERT INTO</span> revenue <span style="color:#3b6ac8">SELECT</span> <span style="color:#1094a0">'Sales'</span><span style="color:#323232">,</span> <span style="color:#c73a69">random</span><span style="color:#323232">()*</span><span style="color:#1094a0">1000.00</span> <span style="color:#3b6ac8">FROM</span> <span style="color:#c73a69">generate_series</span><span style="color:#323232">(</span><span style="color:#1094a0">1</span><span style="color:#323232">,</span><span style="color:#1094a0">10000</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+INSERT 0 10000
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Определим соответствующую политику и включим ее:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">CREATE POLICY</span> departments <span style="color:#3b6ac8">ON</span> revenue
+    <span style="color:#3b6ac8">USING</span> <span style="color:#323232">(</span>department <span style="color:#323232">= (</span><span style="color:#3b6ac8">SELECT</span> department <span style="color:#3b6ac8">FROM</span> users_depts <span style="color:#3b6ac8">WHERE login</span> <span style="color:#323232">=</span> <span style="color:#3b6ac8">current_user</span><span style="color:#323232">));</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE POLICY
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">ALTER TABLE</span> revenue <span style="color:#3b6ac8">ENABLE ROW LEVEL SECURITY</span><span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER TABLE
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+И нужно выдать Алисе и Бобу привилегии:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">GRANT SELECT ON</span> users_depts<span style="color:#323232">,</span> revenue <span style="color:#3b6ac8">TO</span> alice<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+GRANT
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">GRANT SELECT ON</span> users_depts<span style="color:#323232">,</span> revenue <span style="color:#3b6ac8">TO</span> bob<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+GRANT
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Суперпользователь (он же владелец в данном случае) видит все строки независимо
+от политики:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">SELECT</span> department<span style="color:#323232">,</span> <span style="color:#c73a69">SUM</span><span style="color:#323232">(</span>amount<span style="color:#323232">)</span> <span style="color:#3b6ac8">FROM</span> revenue <span style="color:#3b6ac8">GROUP BY</span> department<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ department |     sum     
+------------+-------------
+ PR         | -4997808.81
+ Sales      |  4973793.90
+(2 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+А что увидят Алиса и Боб?
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#00a150">\c</span> <span style="color:#323232">-</span> alice
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;access_rls&quot; as user &quot;alice&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> department<span style="color:#323232">,</span> <span style="color:#c73a69">SUM</span><span style="color:#323232">(</span>amount<span style="color:#323232">)</span> <span style="color:#3b6ac8">FROM</span> revenue <span style="color:#3b6ac8">GROUP BY</span> department<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ department |     sum     
+------------+-------------
+ PR         | -4997808.81
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<div class="S2">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> <span style="color:#323232">-</span> bob
+</pre>
+</div>
+<div class="R2"><pre class="R2">
+You are now connected to database &quot;access_rls&quot; as user &quot;bob&quot;.
+</pre></div>
+<div class="S2">
+<pre style="color:#323232; background-color:#ffffff;  ">bob<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> department<span style="color:#323232">,</span> <span style="color:#c73a69">SUM</span><span style="color:#323232">(</span>amount<span style="color:#323232">)</span> <span style="color:#3b6ac8">FROM</span> revenue <span style="color:#3b6ac8">GROUP BY</span> department<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R2"><pre class="R2">
+ department |    sum     
+------------+------------
+ Sales      | 4973793.90
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Разрешим теперь Бобу добавлять строки в таблицу, но только для своего отдела
+и только в пределах 100 рублей:
+</p>
+<ul class="U">
+<li>первое требование будет выполнено автоматически (единственный предикат работает и для существующих, и для новых строк),</li>
+<li>для второго создадим новую ограничительную политику.</li>
+</ul>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">alice<span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> <span style="color:#323232">-</span> postgres
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;access_rls&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">CREATE POLICY</span> amount <span style="color:#3b6ac8">ON</span> revenue <span style="color:#3b6ac8">AS RESTRICTIVE</span>
+    <span style="color:#3b6ac8">USING</span> <span style="color:#323232">(</span><span style="color:#3b6ac8">true</span><span style="color:#323232">)</span>                        <span style="color:#969696">-- видны все существующие строки</span>
+    <span style="color:#3b6ac8">WITH CHECK</span> <span style="color:#323232">(</span><span style="color:#c73a69">abs</span><span style="color:#323232">(</span>amount<span style="color:#323232">) &lt;=</span> <span style="color:#1094a0">100.00</span><span style="color:#323232">);</span> <span style="color:#969696">-- новые строки должны удовлетворять</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE POLICY
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres<span style="color:#323232">=</span># <span style="color:#3b6ac8">GRANT INSERT ON</span> revenue <span style="color:#3b6ac8">TO</span> bob<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+GRANT
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Проверим:
+</p>
+<div class="S2">
+<pre style="color:#323232; background-color:#ffffff;  ">bob<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> revenue <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">'Sales'</span><span style="color:#323232">,</span> <span style="color:#1094a0">42.00</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R2"><pre class="R2">
+INSERT 0 1
+</pre></div>
+<div class="S2">
+<pre style="color:#323232; background-color:#ffffff;  ">bob<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> revenue <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">'PR'</span><span style="color:#323232">,</span> <span style="color:#1094a0">42.00</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R2"><pre class="R2">
+ERROR:  new row violates row-level security policy for table &quot;revenue&quot;
+</pre></div>
+<div class="S2">
+<pre style="color:#323232; background-color:#ffffff;  ">bob<span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> revenue <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">'Sales'</span><span style="color:#323232">,</span> <span style="color:#1094a0">1000.00</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R2"><pre class="R2">
+ERROR:  new row violates row-level security policy &quot;amount&quot; for table &quot;revenue&quot;
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Конец демонстрации.
+</p>
+</body>
+</html>

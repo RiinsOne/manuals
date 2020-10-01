@@ -1,0 +1,100 @@
+﻿https://nicothin.pro/Atom/Atom-hotkeys.html  # atom hotkeys
+
+mkdir somefolder
+cd somefolder
+
+virtualenv venv
+source venv/bin/activate
+
+pip install django  # установить django
+pip freeze
+
+mkdir app
+cd app
+
+django-admin startproject blogengine  # создаст папку blogengine со всем необходимым
+
+
+
+cd blogengine
+python manage.py startapp blog  # создаст приложение blog
+# делать в той директории, где manage.py
+
+
+# Модель Django
+Model
+View
+Controller
+
+
+./manage.py runserver 5000  # запустить сервер
+./manage.py migrate  # выполнить миграцию
+./manage.py runserver 5000
+http://127.0.0.1:5000/
+
+./manage.py makemigrations  # внести изменения в базу данных (создать файлы миграции)
+./manage.py migrate  # применить миграции
+
+./manage.py shell  # перейти в консоль джанго
+    from blog.models import Post
+    p = Post(title='New post', slug='new-slug', body='new post body')
+    p  # (Post: New post)
+    p.id
+    p.title  # 'New post'
+    p.save()
+    p.id  # 1
+    dir(p)
+
+    p1 = Post.objects.create(title='new post2', slug='new-post2', body='body')
+    p1  # <Post: new post2>
+    Post.objects.all()  # <QuerySet [<Post: New post>, <Post: new post2>]>
+    p1.id  # 2
+
+    post = Post.objects.get(slug='new-slug')
+    post  # <Post: New post>
+    # метод get чувствителен к регистру
+
+    post = Post.objects.get(slug__iexact='New-slug')  # не чувствителен к регистру
+
+    post = Post.objects.get(slug_contains='new')
+    # покажет, что нашел два объекта у которого в slug есть new
+    post = Post.objects.filter(slug_contains='new')
+    # <QuerySet [<Post: New post>, <Post: new post2>]>
+
+    p1 = Post.objects.create(title='post 3', slug='new-post-3', body='body')
+    p2 = Post.objects.create(title='post 4', slug='new-post-4', body='body')
+    p2 = Post.objects.create(title='post 5', slug='new-post-5', body='body')
+
+
+
+
+#
+
+
+https://stackoverflow.com/questions/7296159/django-session-database-table-cleanup
+
+#
+from django.contrib.sessions.models import Session
+Session.objects.all().delete()
+
+# clear all inactive sessions
+python manage.py clearsessions
+
+# cron and venv
+https://stackoverflow.com/questions/3287038/cron-and-virtualenv
+
+# nice example
+https://simpleisbetterthancomplex.com/questions/2017/03/22/how-to-dynamically-filter-modelchoices-queryset-in-a-modelform.html
+
+# filter
+https://www.youtube.com/watch?v=nle3u6Ww6Xk
+https://www.youtube.com/watch?v=GtwK0Hj6jU8
+
+
+
+def get_now():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+class Fault(models.Model):
+    date_time = models.DateTimeField(default=get_now)
+

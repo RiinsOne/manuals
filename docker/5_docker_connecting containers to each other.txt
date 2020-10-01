@@ -1,0 +1,10 @@
+# скачать образ mariadb последней версии и запустить контейнер в фоновом режиме с именем mysqlserver и настроенным переменным окружением с указанием пароля
+docker run --name mysqlserver -e MYSQL_ROOT_PASSWORD=black -d mariadb
+
+# соединяем с adminer
+# установление соединения определяется аргументом --link
+docker run --link mysqlserver:db -p 8080:8080 adminer
+
+# http://192.168.99.100:8080/
+login - root
+password - black

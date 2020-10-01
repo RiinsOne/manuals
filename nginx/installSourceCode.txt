@@ -1,0 +1,97 @@
+https://www.nginx.com/resources/wiki/start/topics/tutorials/installoptions/
+
+# скачать с сылки
+wget https://nginx.org/download/nginx-1.16.0.tar.gz
+
+# разархивировать
+tar -zxvf nginx-1.16.0.tar.gz
+
+# установка необходимых приложений
+sudo apt-get install libpcre3 libpcre3-dev libpcrecpp0v5 libssl-dev zlib1g-dev
+
+# установка
+./configure --sbin-path=/usr/bin/nginx --conf-path=/etc/nginx/nginx.conf --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --with-debug --with-pcre --with-http_ssl_module
+# после установки нужно выполнить make и sudo make install
+
+# файлы конфигурации
+ls -l /etc/nginx/
+
+# запустить nginx
+sudo nginx  # можно проверять в браузере
+
+
+__________________
+получилось
+__________________
+
+# нужно сделать пароль для root
+sudo passwd root
+
+# init скрипты
+https://www.nginx.com/resources/wiki/start/topics/examples/initscripts/
+
+# тут тоже есть инструкция
+https://github.com/JasonGiedymin/nginx-init-ubuntu
+
+# raw
+https://raw.githubusercontent.com/JasonGiedymin/nginx-init-ubuntu/master/nginx
+
+cd /etc/init.d/
+sudo wget https://raw.githubusercontent.com/JasonGiedymin/nginx-init-ubuntu/master/nginx
+
+# чтобы линукс увидел скаченный скрипт файл
+# sudo apt install policykit-1
+update-rc.d -f nginx defaults
+
+# sudo vim /etc/default/nginx
+NGINX_CONF_FILE=/etc/nginx/nginx.conf
+DAEMON=/usr/bin/nginx
+
+# делаем скрипт исполняемым
+sudo chmod +x nginx
+
+# проверить статус
+service nginx status
+service nginx start
+service nginx stop
+
+
+
+# обновление nginx на другую версию, без остановки
+#скачиваем новую или стабильную версию, выполняем все теже команды
+
+# проверить версию
+nginx -V
+
+# проверить какая версия запущена
+curl -I http://84.201.149.213/
+
+HTTP/1.1 200 OK
+Server: nginx/1.16.0
+Date: Mon, 10 Jun 2019 18:31:10 GMT
+Content-Type: text/html
+Content-Length: 612
+Last-Modified: Mon, 10 Jun 2019 17:18:05 GMT
+Connection: keep-alive
+ETag: "5cfe90cd-264"
+Accept-Ranges: bytes
+
+# будет использоваться мастер процесса nginx из предыдущей версии
+# перезагружаем
+service nginx reload
+
+# и снова проверяем
+curl -I http://84.201.149.213/
+
+
+
+
+
+
+
+
+
+
+
+
+#

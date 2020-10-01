@@ -1,0 +1,42 @@
+'.text.html.basic':
+  'block':
+    'prefix': 'bl'
+    'body': """
+      {% block ${1:content} %}
+          ${2:text}
+      {% endblock %}
+      """
+  'for':
+    'prefix': 'for'
+    'body': """
+      {% for ${1:content} %}
+          ${2:text}
+      {% endfor %}
+      """
+  'extends':
+    'prefix': 'ext'
+    'body': """
+      {% extends '${1:content}' %}
+      """
+  'variable':
+    'prefix': 'var'
+    'body': """
+      {{ ${1:content} }}
+      """
+  'url':
+    'prefix': 'url'
+    'body': """
+      {% url '${1:content}' %}
+      """
+  'include':
+    'prefix': 'inc'
+    'body': """
+      {% include '${1:content}' %}
+      """
+  'if':
+    'prefix': 'if'
+    'body': """
+      {% if ${1:content} %}
+          ${2:text}
+      {% endif %}
+      """

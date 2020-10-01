@@ -1,0 +1,427 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF8">
+<style>
+p.c    { }
+h1     { font-size: 160%; font-weight: bold; padding-top: 1ex; padding-bottom: 1ex; }
+div.s1 { margin-left: 20px; padding-left: 10px; font-weight: bold; }
+div.s2 { margin-left: 80px; padding-left: 10px; font-weight: bold; }
+div.s3 { margin-left: 140px; padding-left: 10px; font-weight: bold; }
+div.r1 { margin-left: 20px; padding-left: 10px; }
+div.r2 { margin-left: 80px; padding-left: 10px; }
+div.r3 { margin-left: 140px; padding-left: 10px; }
+div.e  { margin-left: 20px; padding-left: 10px; font-weight: bold; <!--color: darkblue;--> }
+div.r  { margin-left: 20px; padding-left: 10px; <!--color: darkblue;--> }
+</style>
+</head>
+<body>
+<h1>
+Физическая репликация. Резервная копия мастера
+</h1>
+<p class="C">
+Начиная с версии 10, все необходимые настройки уже присутствуют по умолчанию:
+</p>
+<ul class="U">
+<li>wal_level = replica;</li>
+<li>max_wal_senders</li>
+<li>разрешение на подключение в pg_hba.conf.</li>
+</ul>
+<p class="C">
+Создадим автономную резервную копию. В качестве каталога для сохранения сразу
+используем PGDATA резервного сервера. Ключ -R создаст заготовку управляющего
+файла recovery.conf.
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">rm</span> <span style="color:#323232">-</span>rf <span style="color:#323232">/</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql2<span style="color:#323232">/</span>data<span style="color:#323232">/*</span>
+</pre>
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#00a150">pg_basebackup</span> <span style="color:#323232">--</span>pgdata<span style="color:#323232">=/</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql2<span style="color:#323232">/</span>data <span style="color:#323232">-</span>R
+</pre>
+</div>
+<p class="C">
+Резервный сервер уже предварительно собран и установлен.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Реплика
+</h1>
+<p class="C">
+Мы собираемся запустить второй сервер одновременно с основным на одной машине,
+поэтому в настройках необходимо поменять порт:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">echo</span> <span style="color:#1094a0">'port = 5433'</span> <span style="color:#323232">&gt;&gt; /</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql2<span style="color:#323232">/</span>data<span style="color:#323232">/</span>postgresql.auto.conf
+</pre>
+</div>
+<p class="C">
+И добавим параметр горячего резерва, чтобы реплика принимала запросы на чтение:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">echo</span> <span style="color:#1094a0">'hot_standby = on'</span> <span style="color:#323232">&gt;&gt; /</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql2<span style="color:#323232">/</span>data<span style="color:#323232">/</span>postgresql.auto.conf
+</pre>
+</div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Заготовка для recovery.conf была подготовлена утилитой pg_basebackup, и она
+нас устраивает:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">cat</span> <span style="color:#323232">/</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql2<span style="color:#323232">/</span>data<span style="color:#323232">/</span>recovery.conf
+</pre>
+</div>
+<div class="R"><pre class="R">
+standby_mode = 'on'
+primary_conninfo = 'user=postgres passfile=''/home/postgres/.pgpass'' port=5432 sslmode=disable sslcompression=1 target_session_attrs=any'
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Можно запускать сервер.
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#00a150">pg_ctl</span> <span style="color:#323232">-</span>w <span style="color:#323232">-</span>l <span style="color:#323232">/</span>home<span style="color:#323232">/</span>postgres<span style="color:#323232">/</span>logfile2 <span style="color:#323232">-</span>D <span style="color:#323232">/</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql2<span style="color:#323232">/</span>data start
+</pre>
+</div>
+<div class="R"><pre class="R">
+waiting for server to start.... done
+server started
+</pre></div>
+<p class="C">
+В приведенной команде мы явно указываем расположение каталога с данными
+кластера. Для удобства в виртуальной машине есть команды "1" и "2", которые
+переключают окружение на первый и на второй сервер соответственно.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Посмотрим на процессы реплики.
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">ps</span> <span style="color:#323232">-</span>o pid<span style="color:#323232">,</span>command <span style="color:#323232">--</span>ppid <span style="color:#1094a0">`head -n 1 /usr/local/pgsql2/data/postmaster.pid`</span>
+</pre>
+</div>
+<div class="R"><pre class="R">
+  PID COMMAND
+ 4316 postgres: startup process   waiting for 000000010000000000000008
+ 4317 postgres: checkpointer process   
+ 4318 postgres: writer process   
+ 4319 postgres: stats collector process   
+ 4320 postgres: wal receiver process   
+</pre></div>
+<p class="C">
+Процесс wal receiver принимает поток журнальных записей, процесс startup
+применяет изменения.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+И сравним с процессами мастера.
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">ps</span> <span style="color:#323232">-</span>o pid<span style="color:#323232">,</span>command <span style="color:#323232">--</span>ppid <span style="color:#1094a0">`head -n 1 /usr/local/pgsql/data/postmaster.pid`</span>
+</pre>
+</div>
+<div class="R"><pre class="R">
+  PID COMMAND
+ 4209 postgres: postgres postgres [local] idle
+ 4321 postgres: wal sender process postgres [local] idle
+22611 postgres: checkpointer process   
+22612 postgres: writer process   
+22613 postgres: wal writer process   
+22614 postgres: autovacuum launcher process   
+22615 postgres: stats collector process   
+22616 postgres: bgworker: logical replication launcher   
+</pre></div>
+<p class="C">
+Здесь добавился процесс wal sender.
+</p>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Проверка репликации
+</h1>
+<p class="C">
+Состояние репликации можно смотреть в специальном представлении на мастере:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff; ">postgres$ <span style="color:#00a150">psql</span> <span style="color:#323232">-</span>p <span style="color:#1094a0">5432</span>
+</pre>
+</div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_stat_replication <span style="color:#00a150">\gx</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+-[ RECORD 1 ]----+-----------------------------
+pid              | 4321
+usesysid         | 10
+usename          | postgres
+application_name | walreceiver
+client_addr      | 
+client_hostname  | 
+client_port      | -1
+backend_start    | 2019-03-31 15:26:16.48161+03
+backend_xmin     | 
+state            | streaming
+sent_lsn         | 0/8000000
+write_lsn        | 0/8000000
+flush_lsn        | 0/8000000
+replay_lsn       | 0/8000000
+write_lag        | 00:00:00.101554
+flush_lag        | 00:00:00.101554
+replay_lag       | 00:00:00.101554
+sync_priority    | 0
+sync_state       | async
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Выполним несколько команд на мастере:
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE DATABASE</span> replica_overview<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE DATABASE
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\c</span> replica_overview<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+You are now connected to database &quot;replica_overview&quot; as user &quot;postgres&quot;.
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE TABLE</span> <span style="color:#c73a69">test</span><span style="color:#323232">(</span>id <span style="color:#a00050">integer</span> <span style="color:#3b6ac8">PRIMARY KEY</span><span style="color:#323232">,</span> descr <span style="color:#a00050">text</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE TABLE
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Проверим реплику:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff; ">postgres$ <span style="color:#00a150">psql</span> <span style="color:#323232">-</span>p <span style="color:#1094a0">5433</span> <span style="color:#323232">-</span>d replica_overview
+</pre>
+</div>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> test<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R4"><pre class="R4">
+ id | descr 
+----+-------
+(0 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> test <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">1</span><span style="color:#323232">,</span> <span style="color:#1094a0">'Раз'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+INSERT 0 1
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> test<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R4"><pre class="R4">
+ id | descr 
+----+-------
+  1 | &#1056;&#1072;&#1079;
+(1 row)
+
+</pre></div>
+<p class="C">
+При этом изменения на реплике не допускаются:
+</p>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> test <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">2</span><span style="color:#323232">,</span> <span style="color:#1094a0">'Два'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R4"><pre class="R4">
+ERROR:  cannot execute INSERT in a read-only transaction
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<h1>
+Логическая репликация
+</h1>
+<p class="C">
+Теперь переведем реплику из режима восстановления в обычный режим. Таким
+образом, получим два самостоятельных, никак не связанных друг с другом сервера.
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#00a150">pg_ctl</span> <span style="color:#323232">-</span>w <span style="color:#323232">-</span>D <span style="color:#323232">/</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql2<span style="color:#323232">/</span>data promote
+</pre>
+</div>
+<div class="R"><pre class="R">
+waiting for server to promote.... done
+server promoted
+</pre></div>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> test <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">2</span><span style="color:#323232">,</span> <span style="color:#1094a0">'Два'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R4"><pre class="R4">
+INSERT 0 1
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Далее мы хотим настроить между серверами логическую репликацию. Для этого
+нам понадобится дополнительная информация в журнале.
+</p>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">ALTER SYSTEM SET</span> wal_level <span style="color:#323232">=</span> logical<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+ALTER SYSTEM
+</pre></div>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#00a150">pg_ctl</span> <span style="color:#323232">-</span>w <span style="color:#323232">-</span>l <span style="color:#323232">/</span>home<span style="color:#323232">/</span>postgres<span style="color:#323232">/</span>logfile <span style="color:#323232">-</span>D <span style="color:#323232">/</span>usr<span style="color:#323232">/</span>local<span style="color:#323232">/</span>pgsql<span style="color:#323232">/</span>data restart
+</pre>
+</div>
+<div class="R"><pre class="R">
+waiting for server to shut down.... done
+server stopped
+waiting for server to start.... done
+server started
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+На первом сервере создаем публикацию:
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff; ">postgres$ <span style="color:#00a150">psql</span> <span style="color:#323232">-</span>d replica_overview
+</pre>
+</div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE PUBLICATION</span> test_pub <span style="color:#3b6ac8">FOR TABLE</span> test<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+CREATE PUBLICATION
+</pre></div>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\dRp</span><span style="color:#323232">+</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+                Publication test_pub
+  Owner   | All tables | Inserts | Updates | Deletes 
+----------+------------+---------+---------+---------
+ postgres | f          | t       | t       | t
+Tables:
+    &quot;public.test&quot;
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+На втором сервере подписываемся на эту публикацию (отключаем первоначальное
+копирование данных):
+</p>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">CREATE SUBSCRIPTION</span> test_sub
+<span style="color:#3b6ac8">CONNECTION</span> <span style="color:#1094a0">'host=localhost port=5432 user=postgres dbname=replica_overview'</span>
+<span style="color:#3b6ac8">PUBLICATION</span> test_pub <span style="color:#3b6ac8">WITH</span> <span style="color:#323232">(</span>copy_data <span style="color:#323232">=</span> <span style="color:#3b6ac8">false</span><span style="color:#323232">);</span>
+
+</pre>
+</div>
+<div class="R4"><pre class="R4">
+NOTICE:  created replication slot &quot;test_sub&quot; on publisher
+CREATE SUBSCRIPTION
+</pre></div>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#00a150">\dRs</span>
+</pre>
+</div>
+<div class="R4"><pre class="R4">
+            List of subscriptions
+   Name   |  Owner   | Enabled | Publication 
+----------+----------+---------+-------------
+ test_sub | postgres | t       | {test_pub}
+(1 row)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<div class="S1">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">INSERT INTO</span> test <span style="color:#3b6ac8">VALUES</span> <span style="color:#323232">(</span><span style="color:#1094a0">3</span><span style="color:#323232">,</span> <span style="color:#1094a0">'Три'</span><span style="color:#323232">);</span>
+</pre>
+</div>
+<div class="R1"><pre class="R1">
+INSERT 0 1
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> test<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R4"><pre class="R4">
+ id | descr 
+----+-------
+  1 | &#1056;&#1072;&#1079;
+  2 | &#1044;&#1074;&#1072;
+  3 | &#1058;&#1088;&#1080;
+(3 rows)
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Состояние подписки можно посмотреть в представлении:
+</p>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">SELECT</span> <span style="color:#323232">*</span> <span style="color:#3b6ac8">FROM</span> pg_stat_subscription <span style="color:#00a150">\gx</span>
+</pre>
+</div>
+<div class="R4"><pre class="R4">
+-[ RECORD 1 ]---------+------------------------------
+subid                 | 24576
+subname               | test_sub
+pid                   | 4789
+relid                 | 
+received_lsn          | 0/802E0DC
+last_msg_send_time    | 2019-03-31 15:26:20.175076+03
+last_msg_receipt_time | 2019-03-31 15:26:20.175447+03
+latest_end_lsn        | 0/802E0DC
+latest_end_time       | 2019-03-31 15:26:20.175076+03
+
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+К процессам сервера добавился logical replication worker (его номер указан
+в pg_stat_subscription.pid):
+</p>
+<div class="E">
+<pre style="color:#323232; background-color:#ffffff;  ">postgres$ <span style="color:#3b6ac8">ps</span> <span style="color:#323232">-</span>o pid<span style="color:#323232">,</span>command <span style="color:#323232">--</span>ppid <span style="color:#1094a0">`head -n 1 /usr/local/pgsql2/data/postmaster.pid`</span>
+</pre>
+</div>
+<div class="R"><pre class="R">
+  PID COMMAND
+ 4317 postgres: checkpointer process   
+ 4318 postgres: writer process   
+ 4319 postgres: stats collector process   
+ 4543 postgres: postgres replica_overview [local] idle
+ 4642 postgres: wal writer process   
+ 4643 postgres: autovacuum launcher process   
+ 4644 postgres: bgworker: logical replication launcher   
+ 4789 postgres: bgworker: logical replication worker for subscription 24576  
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Если репликация больше не нужна, надо аккуратно удалить подписку - иначе на
+публикующем сервере останется открытым репликационный слот.
+</p>
+<div class="S4">
+<pre style="color:#323232; background-color:#ffffff;  "><span style="color:#323232">=&gt;</span> <span style="color:#3b6ac8">DROP SUBSCRIPTION</span> test_sub<span style="color:#323232">;</span>
+</pre>
+</div>
+<div class="R4"><pre class="R4">
+NOTICE:  dropped replication slot &quot;test_sub&quot; on publisher
+DROP SUBSCRIPTION
+</pre></div>
+<hr size=0 style="border-top: 1px dashed grey; border-bottom: 0;"/>
+<p class="C">
+Конец демонстрации.
+</p>
+</body>
+</html>
