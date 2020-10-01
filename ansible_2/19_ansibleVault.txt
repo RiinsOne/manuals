@@ -1,0 +1,28 @@
+vim mypass.txt
+  privet  # пароль для дешифровки
+
+ansible-playbook playbook_vault.yml --vault-password-file mypass.txt
+  возьмет пароль с файлика
+
+ansible-vault encrypt_string
+  запросит пароль
+  нужно будет ввести зашифрованный текст и нажать ctrl-d дважды
+  и выдаст зашифрованный текст
+
+ansible-vault encrypt_string --stdin-name "mypassword"
+  запросит пароль,
+  потом ввести текст для зашифровки
+  и выдаст зашифрованный текст
+  копируется всё и вставляется в плейбук
+
+echo -n "secretword" | ansible-vault encrypt_string
+  пароль
+  и выдаст зашифрованный текст, начинается с !vault
+
+
+
+
+
+
+
+#

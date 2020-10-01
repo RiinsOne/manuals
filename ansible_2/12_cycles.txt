@@ -1,0 +1,129 @@
+vim playbookloop.yml
+# до версии ansible 2.5 команда with_items:
+# после версии 2.5 команда loop:
+
+---
+- name: Loops Playbook
+  hosts: ms2
+  become: yes
+
+  tasks:
+  - name: Say Hello to ALL
+    debug: msg="Hello {{ item }}"
+    loop:
+    #with_items:
+      - "Vasya"
+      - "Petya"
+      - "Masha"
+      - "Olya"
+
+
+  - name: Loop Until example
+    shell: echo -n Z >> myfile.txt && cat myfile.txt
+    register: output
+    delay: 2
+    retries: 10
+    until: output.stdout.find("ZZZZ") == false
+
+  - name: Print Final Output
+    debug:
+      var: output.stdout
+
+
+#  - name: Install many packages
+#    yum: name={{ name }} state=installed
+#    loop:
+#      - python
+#      - tree
+#      - mysql-client
+
+
+
+
+---
+- name: Install Apache and Upload my Home Page
+  hosts: all
+  become: yes
+
+  vars:
+    source_folder: ./MyWebSite2
+    destin_folder: /var/www/html
+
+  tasks:
+  - name: Check and Print LINUX version
+    debug: var=ansible_os_family
+
+  - block:  # block for REDHAT
+
+      - name: Install Apache Web Server for RedHat
+        yum: name=httpd state=latest
+
+      - name: Start Web Server service for RedHat
+        service: name=httpd state=started enabled=yes
+
+    when: ansible_os_family == "RedHat"
+
+
+  - block:  # block for DEBIAN
+
+      - name: Install Apache Web Server for Debian
+        apt: name=apache2 state=latest
+
+      - name: Start Web Server service for Debian
+        service: name=apache2 state=started enabled=yes
+
+    when: ansible_os_family == "Debian"
+
+
+  - name: Copy HomePage file to Web Server
+    copy: src={{ source_folder }}/{{ item }} dest={{ destin_folder }} mode=0555
+    loop:
+        - "index.html"
+        - "bahamas.png"
+        - "bulgaria.png"
+        - "jordan.png"
+        - "newzeland.png"
+    notify:
+        - Restart Apache RedHat
+        - Restart Apache Debian
+
+
+  handlers:
+  - name: Restart Apache RedHat
+    service: name=httpd state=restarted
+    when: ansible_os_family == "RedHat"
+
+  - name: Restart Apache Debian
+    service: name=apache2 state=restarted
+    when: ansible_os_family == "Debian"
+#
+
+
+
+-----------------------
+# второй способ скопировать все файлы из папки
+
+- name: Copy HomePage file to Web Server
+  copy: src={{ item }} dest={{ destin_folder }} mode=0555
+  with_fileglob: "{{ source_folder }}/*.*""
+
+  notify:
+      - Restart Apache RedHat
+      - Restart Apache Debian
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#

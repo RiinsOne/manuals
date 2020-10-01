@@ -1,0 +1,48 @@
+Переменные групп надо хранить в отдельных файлах
+cd ansible
+mkdir group_vars
+
+vim group_vars/STAGING_SERVERS_WEB
+
+# yaml file
+---
+ansible_user                  : ec2-user
+ansible_ssh_private_key_file  : /home/ec2-user/.ssh/california-key1.pem
+
+после в hosts файле можно стереть переменные [STAGING_SERVERS_WEB:vars]
+
+
+vim group_vars/PROD_SERVERS_WEB
+---
+ansible_user                  : ec2-user
+ansible_ssh_private_key_file  : /home/ec2-user/.ssh/california-key2.pem
+
+после также удаляем из hosts переменные группы PROD_SERVERS_WEB
+
+
+и так далее
+
+
+[APT_DIST_SERVERS]
+cl1  ansible_host=10.130.0.20
+
+[YUM_DIST_SERVERS]
+cl2  ansible_host=10.130.0.05
+
+vim group_vars/APT_DIST_SERVERS
+---
+ansible_user                  : cl1
+ansible_ssh_private_key_file  : /home/black/.ssh/id_rsa
+ansible_python_interpreter    : /usr/bin/python3.6
+
+vim group_vars/YUM_DIST_SERVERS
+---
+ansible_user                  : cl2
+ansible_ssh_private_key_file  : /home/black/.ssh/id_rsa
+ansible_python_interpreter    : /usr/bin/python2.7
+
+
+
+
+
+#

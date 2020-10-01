@@ -1,0 +1,76 @@
+vim playbook8_delegate.yml
+
+---
+- name: My Super Playbook
+  hosts: all
+  become: yes
+
+  vars:
+    mytext: "Hi from OG"
+
+  tasks:
+  - name: Ping test
+    ping:
+
+  - name: Unregister Server from Load Balancer
+    shell: echo This server {{ inventory_host_name }} was deregistered from our Load Balancer, node name is {{ ansible_nodename }} >> /home/log.txt
+    delegate_to: 127.0.0.1
+    # сохранит данные со всех серверов на мастер сервере
+
+  - name: Update my Database
+    shell: #echo updating database...
+    run_once: true
+    # запуститься на одном только сервере, который по порядку
+
+  - name: Create file1
+    copy:
+        dest: /home/secret/file1.txt
+        content: |
+          Text Line1, in file1
+          Text Line2, in file1
+          Text Line3, {{ mytext }}
+    delegate_to: linux3
+    # запустить команду на linux3
+
+  - name: Create file2
+    copy:
+        dest: /home/secret/file2.txt
+        content: |
+          Text Line1, in file2
+          Text Line2, in file2
+          Text Line3, {{ mytext }}
+
+  - name: Reboot my servers
+    shell: sleep 3 && reboot now
+    async: 1
+    pool: 0
+    # pool 0 это закинуть на сервер и не ждать
+    # async 1
+
+  - name: Wait till my servers will come up online
+    wait_for:
+        host: "{{ inventory_host_name }}"
+        state: started
+        delay: 5
+        timeout: 40
+    delegate_to: 127.0.0.1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#

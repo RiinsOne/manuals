@@ -1,0 +1,54 @@
+vim playbook_errorhandling.yml
+
+---
+- name: Ansible Lesson 18
+  hosts: all
+  become: yes
+
+  tasks:
+  - name: Task Number1
+    yum: name=treeeee state=latest
+    ignore_errors: yes
+
+  - name: Task Number2
+    shell: echo Hello World!!!
+    register: results  # сохранить в results
+    failed_when: results.rc == 0
+#    failed_when: "'World' in results.stdout"  # делает фейл, когда есть слово в resulsts.stdout
+
+  - debug:
+      var: results  # распечатать на экран
+
+  - name: Task Number3
+    shell: echo Privet Mir!!!
+
+
+#
+
+---
+- name: Ansible Lesson 18
+  hosts: all
+  any_errors_fatal: true  # любая ошибка прекращает плейбук
+  become: yes
+
+  tasks:
+  - name: Task Number1
+    yum: name=treeeee state=latest
+    ignore_errors: yes
+
+  - name: Task Number2
+    shell: echo Hello World!!!
+    register: results  # сохранить в results
+    failed_when: results.rc == 0
+#    failed_when: "'World' in results.stdout"  # делает фейл, когда есть слово в resulsts.stdout
+
+  - debug:
+      var: results  # распечатать на экран
+
+  - name: Task Number3
+    shell: echo Privet Mir!!!
+
+
+
+
+#

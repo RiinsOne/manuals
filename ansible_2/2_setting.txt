@@ -1,0 +1,25 @@
+CentOs
+1. sudo yum install epel-release
+2. sudo yum install ansible
+3. ansible --version
+
+
+Ubuntu
+1. sudo apt-add-repository ppa:ansible/ansible
+2. sudo apt-get update
+3. sudo apt-get install ansible
+4. ansible --versions
+
+
+Pip
+1. sudo pip install ansible
+2. ansible --version
+Единственный минус такой установки, что не создается конфиг файл по умолчанию
+
+
+
+
+
+
+
+#

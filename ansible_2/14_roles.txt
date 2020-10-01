@@ -1,0 +1,100 @@
+mkdir roles
+cd roles/
+  ansible-galaxy init deploy_apache_web
+
+black@ansible-ms:~/ansible/roles$ ansible-galaxy init deploy_apache_web
+- deploy_apache_web was created successfully
+black@ansible-ms:~/ansible/roles$
+
+black@ansible-ms:~/ansible/roles$ tree
+.
+└── deploy_apache_web
+    ├── defaults
+    │   └── main.yml
+    ├── files
+    ├── handlers
+    │   └── main.yml
+    ├── meta
+    │   └── main.yml
+    ├── README.md
+    ├── tasks
+    │   └── main.yml
+    ├── templates
+    ├── tests
+    │   ├── inventory
+    │   └── test.yml
+    └── vars
+        └── main.yml
+
+9 directories, 8 files
+
+# Что нужно - распихать из плейбука данные по файлам в новых
+# созданных директориях после init
+
+
+# tasks:
+- block:  # block for REDHAT
+    - name: Install Apache Web Server for RedHat
+      yum: name=httpd state=latest
+    - name: Start Web Server service for RedHat
+      service: name=httpd state=started enabled=yes
+  when: ansible_os_family == "RedHat"
+
+- block:  # block for DEBIAN
+    - name: Install Apache Web Server for Debian
+      apt: name=apache2 state=latest
+    - name: Start Web Server service for Debian
+      service: name=apache2 state=started enabled=yes
+  when: ansible_os_family == "Debian"
+
+- name: Generate INDEX.HTML file
+  template: src=index.j2 dest={{ destin_folder }}/index.html mode=0555
+  notify:
+      - Restart Apache RedHat
+      - Restart Apache Debian
+
+- name: Copy HomePage file to Web Server
+  copy: src={{ item }} dest={{ destin_folder }} mode=0555
+  loop:
+      - "bahamas.png"
+      - "bulgaria.png"
+      - "jordan.png"
+      - "newzeland.png"
+  notify:
+      - Restart Apache RedHat
+      - Restart Apache Debian
+
+
+# defaults:
+destin_folder: /var/www/html
+
+# files:
+все файлы, команда mv
+
+# templates:
+шаблон .j2
+
+# handlers:
+- name: Restart Apache RedHat
+  service: name=httpd state=restarted
+  when: ansible_os_family == "RedHat"
+
+- name: Restart Apache Debian
+  service: name=apache2 state=restarted
+  when: ansible_os_family == "Debian"
+
+
+# playbook6.yml
+---
+- name: Install Apache and Upload my Home Page
+  hosts: all
+  become: yes
+
+  roles:
+    - { role: deploy_apache_web, when: ansible_system == 'Linux' }
+    # - deploy_db
+    # - configure_xxxxx
+
+
+
+#

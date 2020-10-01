@@ -1,0 +1,46 @@
+Меняем ключам права доступа на chmod 400
+sudo chmod 400 <имя ключа>
+
+
+
+mkdir ansible
+cd ansible
+
+  vim hosts.txt
+    [staging_servers]
+    cl1  ansible_host=10.130.0.20  ansible_user=cl1  ansible_ssh_private_key_file=/home/black/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3.6
+    названия в квадратных скобках должны быть с нижним подчеркиванием
+
+    [prod servers]
+    cl2  ansible_host=10.130.0.05  ansible_user=cl2  ansible_ssh_private_key_file=/home/black/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python2.7
+    указываем путь до id_rsa ключа (private key) находящегося на master сервере
+    указываем user - на хост сервере, к которму хотим подключиться
+
+  ansible -i hosts.txt all -m ping
+    yes (во второй раз не спросит)
+    ключ -i - это путь к inventory файлу
+  ansible -i hosts.txt cl1 -m ping
+    или выбираем по наименованию lable (cl1 or cl2)
+
+  vim ansible.cfg
+    [defaults]
+    host_key_checking = false
+    inventory = ./hosts.txt
+    отключаем проверку, чтобы не спрашивать yes на каждом сервере
+    и прописываем для инвентори наш файл hosts
+
+    ansible all -m ping
+    теперь команда упрощенная
+
+
+
+
+
+
+
+
+
+
+
+
+#

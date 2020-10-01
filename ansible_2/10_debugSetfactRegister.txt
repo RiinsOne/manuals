@@ -1,0 +1,47 @@
+vim playbook4.yml
+---
+- name: Playbook for Variables
+  hosts: all
+  become: yes
+
+  vars:
+    message1: Hello
+    message2: World
+    secret: P@ssw0rd
+
+  tasks:
+  - name: Print Secret variable
+    debug:
+      var: secret
+
+  - debug:
+      msg: "Secret word: {{ secret }}"
+
+  - debug:
+      msg: "Owner of this server -->{{ owner }}<--"
+
+  - set_fact: full_message="{{ message1 }} {{ message2 }} from {{ owner }}"
+
+  - debug:
+      var: full_message
+
+  - debug:
+      var: ansible_distribution
+
+  - shell: uptime  # команда запустится на удаленном сервере
+    register: results  # команда uptime сохранится в переменную results
+
+  - debug:
+      var: results
+      # так как это json формат можно вывести конкретное значение
+      # var: results.stdout
+
+
+
+
+
+
+
+
+
+#

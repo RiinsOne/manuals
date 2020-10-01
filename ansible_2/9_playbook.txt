@@ -1,0 +1,78 @@
+cd ansible
+vim playbook1.yml
+
+---
+- name: Test Connection to my servers
+  hosts: all  # на всех серверах
+  become: yes # как рут пользователь
+
+  tasks:
+  - name: Ping my servers
+    ping:
+
+ansible-playbook playbook1.yml
+# запустить плейбук
+
+ansible-playbook ansible/playbook1.yml -i ansible/hosts.txt
+# если файлы хостс и плейбук в других директориях
+
+
+vim playbook2.yml
+
+---
+- name: Install default Nginx Web Server
+  hosts: ms2
+  become: yes
+
+  tasks:
+  - name: Install Nginx WebServer
+    apt: name=nginx state=latest
+
+  - name: Start Nginx and Enable it on the every boot
+    service: name=nginx state=started enabled=yes
+
+ansible-playbook playbook2.yml
+
+ansible-playbook playbook2.yml
+# при повторной команде покажет всё ок, если в прошлый раз всё установилось
+# changed - это значит были изменения
+
+
+
+vim playbook3.yml
+---
+- name: Install Apache and Upload my Web Page
+  hosts: all
+  become: yes
+
+  vars: # создаем переменные
+    source_file: ./MyWebSite/index.html
+    destin_file: /var/www/html
+
+  tasks:
+  - name: Install Apache Web Server
+    yum: name=httpd state=latest
+
+  - name: Copy MyHomePage to Servers
+    copy: src={{ source_file }} dest={{ destin_file }} mode=0555  # обратится к переменным через {{ }}
+    notify: Restart Apache
+
+  - name: Start WebServer and make it enable on boot
+    service: name=httpd state=started enabled=yes
+
+  handlers:
+  - name: Restart Apache
+    service: name=httpd state=restarted
+
+ansible-playbook playbook3.yml
+
+
+
+
+
+
+
+
+
+
+#

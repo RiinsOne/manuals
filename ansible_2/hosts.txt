@@ -1,0 +1,16 @@
+[staging_servers]
+cl1  ansible_host=10.130.0.20  ansible_user=cl1  ansible_ssh_private_key_file=/home/black/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3.6
+
+[prod_servers]
+cl2  ansible_host=10.130.0.05  ansible_user=cl2  ansible_ssh_private_key_file=/home/black/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python2.7
+
+#[windows_servers]
+#win12 ansible_host=<ip addr>
+#win16 ansible_host=<ip addr>
+
+#[windows_servers:vars]
+#ansible_user = myadmin
+#ansible_password = P@ssw0rd
+#ansible_port = 5986
+#anislbe_connection = winrm
+#ansible_winrm_server_cert_validation = ignore

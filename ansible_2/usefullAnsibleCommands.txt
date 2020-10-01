@@ -1,0 +1,43 @@
+ansible-inventory --list
+  посмотреть файл inventory (группы, серверы, переменные)
+
+ansible-inventory --graph
+  дерево групп
+
+ansible all -m shell -a "cat /etc/*-release"
+  узнать тип, версию операционной системы
+
+ansible all -m setup
+  настройки всех серверов
+
+ansible-vault create mysecret.txt
+  создаст текстовый зашифрованный файл
+  запросит пароль: ХХХ
+                   ХХХ
+  откроется текстовый редактор vim
+
+ansible-vault view mysecret.txt
+  спросит пароль: ХХХ
+  покажет как cat
+
+ansible-vault edit mysecret.txt
+  редактировать файл
+
+ansible-vault rekey mysecret.txt
+  спросит текущий пароль и новый пароль
+
+ansible-vault encrypt playbook_vault.yml
+  зашифровать другой файл
+  спросит пароль
+
+ansible-vault decrypt playbook_vault.yml
+  дешифровать файл
+
+ansible-playbook playbook_vault.yml --ask-vault-pass
+  спросит пароль и запустит плейбук
+
+
+
+
+
+#

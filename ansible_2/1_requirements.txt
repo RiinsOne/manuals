@@ -1,0 +1,23 @@
+Control server - Master server:
+1. Linux only (RedHat, Devian, CentOs, OsX)
+2. Python2.6+ или Python3.5+
+
+Controlled Servers - Managed Servers:
+1. Linux: Admin Username/Password или SSH Key и Python2.6+
+2. Windows: Admin Username/Password, PowerShell 3.0 и запустить скрипт
+/ConfigureRemotingForAnsible.ps1
+
+Работа происходит через следующие протоколы и порты:
+Linux - SSH Port 22
+Windows - WinRM Port 5986
+
+
+
+
+
+
+
+
+
+
+#

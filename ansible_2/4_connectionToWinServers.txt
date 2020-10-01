@@ -1,0 +1,35 @@
+sudo apt install python3-pip
+sudo pip3 install "pywinrm>=0.2.2"
+
+cd ansible
+  vim hosts.txt
+    [windows_servers]
+    win12 ansible_host=<ip addr>
+    win16 ansible_host=<ip addr>
+
+    [windows_servers:vars]
+    ansible_user = myadmin
+    ansible_password = P@ssw0rd
+    ansible_port = 5986
+    anislbe_connection = winrm
+    ansible_winrm_server_cert_validation = ignore
+
+в браузере - ansible for windows
+  https://docs.ansible.com/ansible/latest/user_guide/windows.html
+
+  скачиваем скрипт на каждую windows машину и выполняем его
+  https://github.com/ansible/ansible/blob/devel/examples/scripts/ConfigureRemotingForAnsible.ps1
+
+  далее открыть powershell как администратор
+  и запускаем скрипт .\ConfigureRemotingForAnsible.ps1
+
+ansible windows_servers -m win_ping
+  на windows модуль win_ping
+
+если в hosts.txt удалить переменную ansible_password, то запускаем команду с ключом --ask-pass
+  ansible windows_servers -m win_ping --ask-pass
+  запросит пароль
+
+
+
+#

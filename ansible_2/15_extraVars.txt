@@ -1,0 +1,34 @@
+# hosts.txt
+127.0.0.1 ansible_connection=local
+
+[APTWEB_DIST_SERVERS]
+ms2  ansible_host=10.130.0.35
+
+[ALL_LINUX:children]
+APTWEB_DIST_SERVERS
+#
+
+# playbook6.yml
+---
+- name: Install Apache and Upload my Home Page
+  hosts: "{{ MYHOSTS }}"
+  become: yes
+
+  roles:
+    - { role: deploy_apache_web, when: ansible_system == 'Linux' }
+    # - deploy_db
+    # - configure_xxxxx
+
+
+ansible-playbook playbook6.yml --extra-var "MYHOSTS=APTWEB_DIST_SERVERS"
+ansible-playbook playbook6.yml --extra-var "MYHOSTS=APTWEB_DIST_SERVERS owner=OG"
+# переменные в extra vars имеют наивысший приоритет
+
+
+
+
+
+
+
+
+#

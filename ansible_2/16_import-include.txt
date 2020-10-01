@@ -1,0 +1,76 @@
+vim create_folders.yml
+
+---
+- name: Create Folder1
+  file:
+    path: /home/secret/folder1
+    state: directory
+    mode: 0755
+
+- name: Create Folder2
+  file:
+    path: /home/secret/folder2
+    state: directory
+    mode: 0755
+
+
+
+vim create_files.yml
+
+---
+- name: Create file1
+  copy:
+      dest: /home/secret/file1.txt
+      content: |
+        Text Line1, in file1
+        Text Line2, in file1
+        Text Line3, {{ mytext }}
+
+- name: Create file2
+  copy:
+      dest: /home/secret/file2.txt
+      content: |
+        Text Line1, in file2
+        Text Line2, in file2
+        Text Line3, {{ mytext }}
+
+
+
+vim playbook7_includes.yml
+
+---
+- name: My Super Playbook
+  hosts: all
+  become: yes
+
+  vars:
+    mytext: "Hi from OG"
+
+  tasks:
+  - name: Ping test
+    ping:
+
+  - name: Create Folders
+    include: create_folders.yml
+    # import - копирует текст из файлов
+    # include -
+
+  - name: Create Files
+    include: create_files.yml   mytext="Hi from OG2"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
