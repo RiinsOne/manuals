@@ -1,0 +1,9 @@
+# ubuntu
+cd /etc/init  # содержит все файлы задания (job) с расширением .conf
+cat shutdown.conf
+cat ufw.conf  # родной fw ubuntu
+
+cat /etc/init/rc-sysinit.conf  # env DEFAULT_RUNLEVEL=2 - уровень выполнения по умолчанию, строчка которая за это отвечает
+
+inictl show-config  # показывает основные задачи и в каком случае выполняются
+initctl check-config  # проверят конфликты конфигураций

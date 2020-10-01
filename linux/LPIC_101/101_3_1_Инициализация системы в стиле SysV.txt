@@ -1,0 +1,36 @@
+# в старых версиях linux, инициализация - init
+# пример centos5.4
+cd /etc/init.d
+
+# остановить службу
+./network stop
+./network start
+# тоже самое
+service network restart
+
+#
+cd /etc
+ls -l | grep rc.
+cd rc3.d
+ls  # K - kill process, S - start, цифры - последовательность выполнения
+cd ../rc4.d
+ls
+cd ../rc1.d
+ls
+
+# уровень загрузки
+runlevel  # N 3
+
+# переключиться на другой уровень загрузки
+telinit 1  # перейдем в однопользовательский режим
+telinit 3  # вернуться в многопользовательский режим
+
+# сообщить всем пользователям
+root# wall "Some text"
+
+#
+service sendmail stop
+/etc/init.d/sendmail start  # тоже самое
+
+# ключ -h - значит halt, выключить
+shutdown -h now

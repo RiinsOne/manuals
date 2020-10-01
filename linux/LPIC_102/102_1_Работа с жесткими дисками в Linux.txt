@@ -1,0 +1,115 @@
+# посмотреть диски
+sudo fdisk -l
+
+# добавляем новый виртуальный жесткий диск - sdb
+sudo fdisk /dev/sdb
+
+# работа с диском
+-> m
+-> n
+-> p
+-> <default 1>
+-> <default>
+-> +2GB
+
+-> n
+-> e
+-> <default 2>
+-> <default>
+-> +4GB
+
+-> n
+-> p
+-> <default 3>
+-> <default>
+-> <default>
+
+-> w (save)
+
+#
+sudo fdisk /dev/sdb
+-> n
+-> l
+-> <default 5>
+-> <default>
+-> +1GB
+
+-> n
+-> l
+-> <default 6>
+-> <default>
+-> <default>
+
+-> w (save)
+
+# поменяем id разделов
+sudo fdisk /dev/sdb
+-> t
+-> 3
+-> a5
+-> w
+fdisk -l  # проверить
+
+# далее нужно отформатировать разделы
+mkfs.ext4 /dev/sdb5
+
+# посмотреть текущий раздел подкачки
+black@vlpic001:/$ swapon -s
+Filename				Type		Size	Used	Priority
+/dev/sda5                              	partition	998396	19456	-2
+
+#
+black@vlpic001:/$ cat /etc/fstab
+# /etc/fstab: static file system information.
+#
+# Use 'blkid' to print the universally unique identifier for a
+# device; this may be used with UUID= as a more robust way to name devices
+# that works even if disks are added and removed. See fstab(5).
+#
+# <file system> <mount point>   <type>  <options>       <dump>  <pass>
+# / was on /dev/sda1 during installation
+UUID=65779e89-e453-414f-aa62-5c16927ff2b6 /               ext4    errors=remount-ro 0       1
+# swap was on /dev/sda5 during installation
+UUID=270c3eef-0567-4060-b4f3-82057879ba4d none            swap    sw
+
+# монтирование
+mkdir /mounted
+mount /dev/sdb5 /mounted
+
+# отмонтировать
+umount /mounted
+# после перезагрузки всё слетит, для автомотического монтирования нужно корректировать файл fstab
+
+# посмотреть физические тома
+pvdisplay
+
+# показать volume group
+vgdisplay
+
+# показать логические тома
+lvdisplay
+
+
+# создадим два праймери раздела с форматом 8e (Linux LVM)
+fdisk /dev/sdb
+
+# создадим pv (физический том)
+pvcreate /dev/sdb1
+pvcreate /dev/sdb2
+
+# создадим vg - virtual group
+vgcreate vg_black /dev/sdb1 /dev/sdb2
+
+# создадим пару логических томов
+lvcreate -n lv1 -L 2G vg_black
+lvcreate -n lv2 -L 3G vg_black
+
+#
+fdisk -l
+
+# форматируем
+mkfs.ext4 /dev/vg_black/lv1
+mkfs.ext4 /dev/vg_black/lv2
+
+# изменить раздел логического тома
+lvresize -L 4G vg_black/lv2

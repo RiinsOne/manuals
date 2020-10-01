@@ -1,0 +1,296 @@
+запускаем например xubuntu без установки
+
+ls -l /dev/sd*
+посмотреть жесткие диски
+
+ls -l /dev/disk/by-id/
+посмотреть все устройства
+
+sudo parted /dev/sda
+утилита партед для работы с жесткими дисками
+
+    help mklabel
+    посмотреть типа partition table
+
+    mklabel msdos
+    создать partion table msdos
+
+    p
+    посмотреть из каких разделов состоит жесткий диск
+
+    quit
+    выйти из программы партед
+
+ls -l /dev/sd*
+создан партишион тейбл, но разделов нет
+
+sudo pvcreate /dev/sda
+создать некоторую метку, что этот жесткий диск будет использоваться в структуре LVM
+первый этап "пирамидки" логикал вольюм
+
+sudo pvremove /dev/sda
+удалить метку
+
+второй этап, создать вольюм групп
+sudo vgcreate vg0 /dev/sda
+
+sudo vgdisplay
+посмотреть информацию, какие vg существуют и т.д.
+
+sudo pvdisplay
+посмотреть какие существуют физические устройства, помеченные как vg
+
+создать логический раздел нашего пула vg0
+sudo lvcreate -n swap -L1G vg0
+создали логический том и назвали swap
+
+sudo lvdisplay
+
+ls -l /dev/vg0  # swap -> ../dm-0
+ls -l /dev/dm*  # /dev/dm-0
+dm* - блочные устройства
+
+sudo lvcreate -n root -l100%FREE vg0
+создать том с остатками пространства в vg0
+
+sudo lvdisplay
+покажет два логических тома
+
+разрушаем пирамидку
+sudo lvremove /dev/vg0/root
+sudo lvremove /dev/vg0/swap
+
+sudo lvdisplay
+пусто
+
+sudo vgremove vg0
+sudo pvremove /dev/sda
+
+----------
+больше 2ТБ нужно выбирать gpt (guid partition table), до 2ТБ msdos
+
+sudo parted /dev/sda
+    mklabel gpt
+    p  # partition table: gpt
+    q
+
+sudo pvcreate /dev/sda
+получаем ошибку, что устройство /dev/sda не найдено или не подготовлено
+
+при gpt нужно хотя бы иметь раздел жесткого диска
+sudo parted /dev/sda
+    mkpart
+        partition name      lvm
+        file system type    оставляем пусто и enter (не имеет значение сейчас)
+        start               1   (стартовое значение, с первого мегабайта)
+        end                 -1 (и по самый конец)
+
+    p
+    покажет один раздел на весь жесткий диск
+    q
+
+ls -l /dev/sd*
+покажет новый раздел /dev/sda1
+
+при структуре LVM нужно выбирать созданный раздел sda1
+sudo pvcreate /dev/sda1
+
+sudo pvremove /dev/sda1
+удаляем разметку и корректируем
+
+sudo parted /dev/sda
+    p
+    rm 1  # удалить раздел
+
+    необходим небольшой раздел для загрузки ОС
+    unit mib  # help unit (посмотреть возможные измерения)
+    ввести единицу измерения МБ
+
+    mkpart
+        name        biosgrub
+        file system
+        start       1
+        end         65 (64 МБ +1 стартовый мегабайт)
+
+    p  # значит print, показать
+
+    нужно присвоить флаг
+    set 1 bios_grub on
+    установить на первый раздел флаг биос_граб, on - значит включить
+
+    p
+
+    mkpart
+        name        boot
+        file system
+        start       65
+        end         321 (хочу выделить 256 МБ, значить 256 + 65, можно выделить до 1GB при физической машине)
+
+    mkpart
+        name        lvm
+        fs
+        start       321
+        end         -1
+
+    p
+    q
+
+ls -l /dev/sd*
+покажет sda1, sda2, sda3
+
+sudo pvcreate /dev/sda3
+sudo vgcreate vg0 /dev/sda3
+
+sudo lvcreate -n root -L6G vg0
+sudo lvcreate -n swap -L1G vg0
+
+sudo vgdisplay
+осталось ещё 700МБ, пусть он будет
+
+sudo lvdisplay
+
+файловую систему можно создать отдельно или при установки xubuntu
+
+создадим файловую систему вручную
+sudo mkfs.ext4 /dev/vg0/root
+ext4 более популярная и более проверенная
+этот том теперь можно подключать, монтировать и записывать данные
+
+sudo mkdir /mnt/root
+sudo mount /dev/vg0/root /mnt/root
+ls -l /mnt/root
+df -h
+покажет, что мы действительно подключили файловую систему
+
+ls -l /dev/mapper
+ещё один каталог, где ссылки на lvm, raid, зашифрованные диски
+
+sudo umount /mnt/root
+отмонтировать логический том
+
+диск подготовили
+установка операционной системы
+на рабочем столе выбрать установить
+выбираем "другой вариант"
+    1 раздел biosgrub, будет по умолчанию
+    2 раздел выбираем, на change, тип файловой системы Ext4, точка монтирования /boot, галка форматировать
+
+    /dev/mapper/vg0-root    ext4    выбираем change, выбираем Ext4, точка монтирования / (слэш, т.е. root)
+    /dev/mapper/vg0-swap    выбираем - раздел подкачки
+
+    установить, продолжить
+
+----------
+после установки системы, проверим
+
+sudo pvdisplay
+sudo vgdisplay
+sudo lvdisplay
+
+df -h
+посмотреть кол-во занятого и свободного места на диске
+
+swapon -s
+swap файл подключен к нужному тому
+
+vg - создаем под конкретные задачи
+1 vg = 1 задача
+    установка ОС
+    бэкап
+    пул для хранения виртуальных машин KVM
+
+df -h
+sudo vgdisplay
+
+sudo lvextend -L+512MB /dev/vg0/root
+увеличить том vg0/root на 512 МБ, можно указать и конечный объем, через ключ -L12G
+
+df -h
+размер фаловой системы остался тотже
+
+sudo resize2fs /dev/vg0/root
+обновить размер файловой системы
+
+df -h
+    стало на 512МБ больше
+
+просто так LVM том уменьшить нельзя
+нужно сначала уменьшить размер файловой системы и потом уже том
+
+lvextend -r -L+128MB /dev/vg0/root
+ключ "-r" позволяет автоматически подстроить нужный размер фаловой системы под LVM контейнер для этого тома
+т.е. команда resize2fs не нужна
+
+для уменьшения раздела его нужно отмонтировать
+для уменьшения раздела root, нужно загрузиться с livecd
+
+----------
+загружаемся с livecd
+
+sudo vgdisplay
+sudo lvdisplay
+
+df -h
+тома не смонтированы
+
+теперь можно изменять тома разделов
+нужно проверить файловую систему на ошибки
+sudo e2fsck /dev/vg0/root
+
+sudo e2fsck -f /dev/vg0/root
+проверить более детально, тщательно
+
+sudo lvreduce -r -L-512MB /dev/vg0/root
+уменьшить том root на 512 МБ
+
+----------
+подключаем ещё один жесткий диск (через virtual box)
+расширяем дисковый объем нашей логической volume group
+
+ls -l /dev/sd*
+появился новый диск /dev/sdb
+
+sudo parted /dev/sdb
+    mklabel msdos
+    p
+
+ls -l /dev/sd*
+раздел один, sdb
+
+sudo pvcreate /dev/sdb
+
+sudo vgextend vg0 /dev/sdb
+увеличить vg0 помеченным устройством sdb
+
+sudo vgdisplay
+увидем, что vg0 состоит из 2 физических устройства и объем увеличен на 8 гигабайт
+
+sudo lvextend -r -L12G /dev/vg0/root
+увеличить раздел ровно на 12 гигабайт
+
+sudo vgdisplay
+
+sudo lvcreate -n home -L2G vg0
+sudo lvdisplay /dev/vg0/home
+sudo mkfs.ext4 /dev/vg0/home
+sudo mkdir /mnt/home
+sudo mount /dev/vg0/home /mnt/home
+ls -l /mnt/home
+если нажать альт+точка, то допишется последний параметр предыдущей команды
+
+df -h
+увидем, что home подключен
+
+sudo rsync -avXP /home/. /mnt/home/.
+перенести данные (синхронизировать) из /home в /mnt/home
+
+ls -l /mnt/home/black
+проверить перенос данных
+
+sudo nano /etc/fstab
+    /dev/mapper/vg0-home    /home      ext4    defaults    0   2
+после нужно перезагрузиться
+
+df -h
+    отдельный логический том подключен к /home
+так мы можем перенести любые данные любого каталога на LVM том

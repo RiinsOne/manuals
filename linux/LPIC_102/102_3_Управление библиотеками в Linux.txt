@@ -1,0 +1,31 @@
+# директории библиотек
+cd /lib  # библиотеки, которые используются программами, которые находятся в папке /bin
+cd /usr/lib  # библиотеки программ, которые находятся в папке /usr/bin
+
+# пути к библиотекам указаны в файле
+black@vmsg001:/usr$ sudo cat /etc/ld.so.conf
+[sudo] password for black:
+include /etc/ld.so.conf.d/*.conf
+
+black@vmsg001:/etc/ld.so.conf.d$ ls
+fakeroot-x86_64-linux-gnu.conf  libc.conf  x86_64-linux-gnu.conf
+
+#
+cd /etc
+ls | grep ld.
+    ld.so.cache
+    ld.so.conf
+    ld.so.conf.d
+
+# ldconfig - обновить кэш
+
+# посмотреть какие библиотеки использует программа
+ldd /bin/ls
+black@vmsg001:/etc$ ldd /bin/ls
+        linux-vdso.so.1 =>  (0x00007ffd2cdaa000)
+        libselinux.so.1 => /lib/x86_64-linux-gnu/libselinux.so.1 (0x00007f3b20b50000)
+        libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f3b20786000)
+        libpcre.so.3 => /lib/x86_64-linux-gnu/libpcre.so.3 (0x00007f3b20516000)
+        libdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f3b20312000)
+        /lib64/ld-linux-x86-64.so.2 (0x00007f3b20d72000)
+        libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f3b200f5000)

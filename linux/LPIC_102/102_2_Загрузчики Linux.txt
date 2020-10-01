@@ -1,0 +1,83 @@
+# показать куда смонтировать загрузочный раздел и например корневая папка
+# раньше использовалась команда mount
+
+# теперь
+fdisk -l
+
+Disk /dev/sda: 10 GiB, 10737418240 bytes, 20971520 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+Disklabel type: dos
+Disk identifier: 0x776fa98d
+
+Device     Boot   Start      End  Sectors  Size Id Type
+/dev/sda1  *       2048  1499135  1497088  731M 83 Linux
+/dev/sda2       1501182 20969471 19468290  9.3G  5 Extended
+/dev/sda5       1501184 20969471 19468288  9.3G 8e Linux LVM
+
+
+Disk /dev/mapper/vmsg001--vg-root: 8.3 GiB, 8938061824 bytes, 17457152 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+
+Disk /dev/mapper/vmsg001--vg-swap_1: 980 MiB, 1027604480 bytes, 2007040 sectors
+Units: sectors of 1 * 512 = 512 bytes
+Sector size (logical/physical): 512 bytes / 512 bytes
+I/O size (minimum/optimal): 512 bytes / 512 bytes
+
+# команда для резервного копирования
+# dd - делает по секторно, учитывает геометрию диска
+black@vmsg001:~$ sudo dd if=/dev/sda of=/root/backup.mbr bs=512 count=1
+1+0 records in
+1+0 records out
+512 bytes copied, 0.000580958 s, 881 kB/s
+black@vmsg001:~$
+
+
+
+
+# sudo apt-get install lilo
+# старый linux loader
+black@vmsg001:~$ sudo liloconfig
+1 images '/boot/vmlinuz*' found.
+New file created as: /etc/lilo.conf
+Now you must execute '/sbin/lilo' to activate this new configuation!
+
+# изменяем конфиг, ищем id нашего диска и вставляем в lilo config в строке boot
+cd /dev/disk/by-id
+
+# применяем конфиг lilo
+lilo
+
+
+
+# старый grub
+cd /boot/grub
+cat menu.lst
+
+
+# современный grub 2
+
+# установить grub2
+root@vmsg001:~# grub-install /dev/sda
+Installing for i386-pc platform.
+Installation finished. No error reported.
+
+# узнать версию
+grub-install --version
+grub-install (GRUB) 2.02~beta2-36ubuntu3.23
+
+# основной файл конфигурации
+cat /boot/grub/grub.cfg
+
+# настройки
+cat /etc/default/grub
+
+#
+cd /etc/grub.d
+
+# применить изменения
+update-grub

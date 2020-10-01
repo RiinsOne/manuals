@@ -1,0 +1,198 @@
+добавляем ещё пару дисков к виртуальной машине
+disk3 и disk4
+
+ls -l /dev/sd*
+    ...
+    sdc
+    sdd
+
+sudo parted /dev/sdc
+    mklabel msdos
+    select /dev/sdd
+    p  # убедимся, что выбрали новый диск
+    mklabel gpt
+    mkpart
+        name    lvm
+        fs
+        start   1
+        end     -1
+    p  # проверить
+    q  # выйти
+
+ls -l /dev/sd*
+
+sudo pvcreate /dev/sdc
+sudo vgextend vg0 /dev/sdc
+через пробел можно указывать несколько устройств
+
+sudo vgdisplay
+3 физических устройства существуют в vg0
+
+sudo pvcreate /dev/sdd1
+sudo vgcreate vg1 /dev/sdd1
+
+sudo pvdisplay | less
+sudo vgdisplay | less
+
+sudo lvcreate -n backup -l100%FREE vg1
+sudo lvdisplay
+sudo mkfs.ext4 /dev/vg1/backup
+
+sudo mkdir /mnt/backup
+sudo mount /dev/vg1/backup /mnt/backup
+df -h
+
+----------
+backup существующего каталога home
+через lvm snapshot
+
+sudo vgdisplay vg0
+home смонтирована сюда
+свободно 8,68 гигабайт 2221 физикл экстент (physical extent)
+
+sudo lvcreate -s -n home_snap -L128MB /dev/vg0/home
+в данном случае -L размер буфера для этого снэпшота
+т.е. буфер для данных, которые могут быть записаны на диск в момент создания снэпшота
+
+sudo vgdisplay vg0
+свободная область изменилась на 128МБ, которую мы указали
+
+sudo lvdisplay /dev/vg0/home* | less
+
+dd if=/dev/zero of=/home/alex/zero1 bs=1M count=32
+создадим файл суммарно 32 МБ, который будет содержать одни нули
+
+sudo lvdisplay /dev/vg0/home* | less
+изменилась информация по снэпшоту home_snap
+    allocated to snapshot   25,21%
+
+sudo mkdir /mnt/home_snap
+sudo mount /dev/vg0/home_snap /mnt/home_snap
+ls -l /mnt/home_snap/alex
+    в снэпшоте те данные, которые были на момент создания снэпшота
+
+sudo lvdisplay /dev/vg0/home_snap
+    занято 25% в буфере
+    таблица содержит в себе информацию об изменениях в файловой системе
+
+rm ./zero1
+удаляем файл
+
+sudo lvdisplay /dev/vg0/home_snap
+после удаления файла, стало даже чуть больше allocated to snapshot, т.к. записывает изменения файловой системы
+
+dd if=/dev/zero of=/home/alex/zero2 bs=1M count=256
+создать файл 256мб
+
+sudo lvdisplay /dev/vg0/home*
+    ...home
+        snapshot status     innactive
+
+    ...home_snap
+        snapshot status     innactive
+
+    переполнение буфера, такое нельзя, пока существуют снэпшот
+
+sudo umount /mnt/home_snap
+sudo lvremove /dev/vg0/home_snap
+будут ошибки ввода/вывода, спросить действительно ли хотим уничтожить - y
+
+sudo vgdisplay vg0
+все значения вернулись обратно
+
+----------
+snapshot на чтение
+
+sudo lvcreate -s -p r -n -home_snap -L1G /dev/vg0/home
+ключи "-p r" на чтение, "-p rw" на чтение/запись
+
+sudo lvdisplay /dev/vg0/home_snap
+
+sudo lvremove /dev/vg0/home_snap
+
+sudo lvcreate -s -p rw -n -home_snap -L1G /dev/vg0/home
+создадим новый на чтение и запись
+
+sudo lvdisplay /dev/vg0/home_snap
+проверим
+
+sudo mount /dev/vg0/home_snap /mnt/home_snap
+
+мы можем записать любой файл в снэпшот
+dd if=/dev/zero of=/mnt/home_snap/alex/zero3 bs=1MB count=512
+
+sudo lvdisplay /dev/vg0/home_snap
+    буфер занят на 47%, т.е. при записи в снэпшот этот буфер также используется
+    для чего записывать в снэпшот, неясно
+
+sudo umount /mnt/home_snap
+sudo lvremove /dev/vg0/home_snap
+
+----------
+если диск выходит из строя
+
+sudo pvdisplay
+первая процедура при переносе данных, нужно сравнить, есть ли у нас свободное дисковое пространство в vg
+
+sudo vgdisplay
+посмотреть свободные экстенты
+
+sudo pvmove /dev/sdb -v
+перенос данных с одного диска на другой диск
+
+sudo pvdisplay
+диск sdb теперь свободен, а диск sdc занят на столько, сколько распологалось информации на диске sdb
+
+sudo vgreduce vg0 /dev/sdb
+удалить диск sdb из группы vg0
+
+sudo pvremove /dev/sdb
+необязательно, если диск болеет, то это чисто формальность
+
+после можно выключить сервер, заменить диск и начать сначала
+sudo pvcreate /dev/sdb
+sudo vgextend vg0 /dev/sdb
+
+----------
+sudo vgdisplay vg1
+
+sudo vgreduce vg0 /dev/sdb
+sudo vgextend vg1 /dev/sdb
+
+sudo lvremove /dev/vg1/backup
+удалим lvm том backup
+теперь у нас чистая группа
+
+эмуляция raid 0
+sudo lvcreate -i2 -I32 -L2G -n raid0 vg1
+i - количество физических дисков, которые должны участвовать
+I - на какое кол-во блоков запись должна разбиваться при записи на текущий lvm том
+
+sudo mkfs.ext4 /dev/vg1/raid0
+
+sudo lvdisplay /dev/vg1/raid0
+
+sudo mkdir /mnt/raid0
+sudo mount /dev/vg1/raid0 /mnt/raid0
+
+sudo dd if=/dev/zero of=/mnt/raid0/zero1 bs=1MB count=1024
+
+sudo pvdisplay /dev/sdd1 /dev/sdb
+занятый объем данных одинаковый у двух дисков
+
+raid0 - нецелесообразно, тем более через LVM, если один диск умрет, то все данные пропадет
+
+sudo umount /mnt/raid0
+sudo lvremove /dev/vg1/raid0
+
+----------
+sudo vgremove vg1
+
+sudo vgcreate -s 1M vg1 /dev/sdb
+sudo vgdisplay vg1
+    PE Size     1,00 MiB
+
+sudo vgextend vg1 /dev/sdd1
+    PE Size тоже 1Мб
+
+обычно используют 4МБ по умолчанию
