@@ -1,0 +1,18 @@
+#!/usr/bin/python3.6
+import ym
+import subprocess
+name = ym.xmlFileName
+download = f'lftp sftp://domodedova:Hew3wruf@57.250.192.37 -e "cd CKIXML; mget {name}; quit"'
+subprocess.call(download, shell=True)
+move = f'mv ~/scripts/{name} ~/sitadata'
+subprocess.call(move, shell=True)
+send = f'mpack -s "AUTO SCRIPT: don\'t reply to this message. {name}" ~/sitadata/{name} orkhangasanov@dme.ru'
+subprocess.call(send, shell=True)
+send1 = f'mpack -s "AUTO SCRIPT: don\'t reply to this message. {name}" ~/sitadata/{name} olgachepurnaya@dme.ru'
+subprocess.call(send1, shell=True)
+#send2 = f'mpack -s "AUTO SCRIPT: don\'t reply to this message. {name}" ~/sitadata/{name} AlekseyRodchenkov@domo
+dedovo.ru'
+#subprocess.call(send2, shell=True)
+send3 = f'mpack -s "AUTO SCRIPT: don\'t reply to this message. {name}" ~/sitadata/{name} OB_MKP_DEVELOPERS@DME.R
+U'
+subprocess.call(send3, shell=True)

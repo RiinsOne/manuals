@@ -1,0 +1,426 @@
+﻿# 1. Установка виртуального окружения.
+
+# 1.1. Установка venv (по умолчанию должно быть установлено).
+# Pip поставляется в python начиная с версии 3.4.
+pip install virtualenv
+
+# 1.2. Создание виртуального окружения.
+python -m venv <name>
+
+# 1.3. Активация venv. Для Win также необходимо разрешить скрипты, в случае появления ошибки.
+venv\Scripts>activate.ps1		# для Win
+source venv/bin/activate		# для Unix
+
+# 2. Установка django
+pip install django
+
+# 3. Создание нового django проекта, в текущей директории.
+django-admin startproject samplesite
+
+# 4. Запуск отладочного сервера.
+python manage.py runserver		# по умолчанию 8000 порт
+python manage.py runserver 5000		# меняем порт на 5000
+# или
+manage.py runserver
+# по умолчанию создаст базу данных db.sqlite3, если не указана иная в settings.py
+
+# 5. Создание нового приложения django.
+python manage.py startapp bboard
+
+# 5.1. Добавление нового приложения в settings.py.
+INSTALLED_APPS = [
+	...
+	'bboard.apps.BboardConfig',
+]
+
+# 5.2. Написание контроллера (view).
+# bboard.view.py
+from django.http import HttpResponse
+
+def index(request):
+	return HttpResponse('Здесь будет выведен список объявлений')
+
+
+# 5.3. Добавление нового маршрута.
+# В основном urls.py пакета конфигурации.
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+	path('bboard/', include('bboard.urls')),
+	path('admin/', admin.site.urls),
+]
+
+# Создаем urls.py в приложение bboard
+from django.urls import path
+from .views import index
+
+urlpatterns = [
+	path('', index),
+]
+# маршрут будет доступен по адресу - localhost:8000/bboard/
+
+# 6. Создаем модель базы данных в models.py приложения bboard.
+from django.db import models
+
+class Bb(models.Model):
+	title = models.CharField(max_length=50)
+	content = models.TextField(null=True, blank=True)
+	price = models.FloatField(null=True, blank=True)
+	published = models.DateTimeField(auto_now_add=True, db_index=True)
+
+# CharField - строкое поле фиксированной длины (max_length)
+# TextField - текстовое поле неограниченной длины или memo-поле.
+# null и blank = True - значит, что поле можно не заполнять.
+# По умолчанию любое поле обязательно к заполнению
+# FloatField - поле для вещественных чисел.
+# DateTimeField - поле для хранения отметки даты и времени.
+# db_index - создать для поля индекс.
+
+# 7. Создание миграции.
+python manage.py makemigrations bboard
+# или команду без явного указания приложения
+python manage.py makemigrations
+# создаст модули миграции в папке migrations в пакете приложения, 0001_initial.py
+
+# посмотреть результирующий SQL-код для нашей миграции
+manage.py sqlmigrate bboard 0001
+# в командной строке мы получим следующий код, сгенерированный для SQLite
+BEGIN;
+--
+-- Create model Bb
+--
+CREATE ТАВLЕ "bboard_bb" (
+	"id" integer NOT NULL PRIМARY КЕУ AUTOINCREМENT,
+	"title" varchar(50) NOT NULL,
+	"content" text NULL,
+	"price" real NULL,
+	"published" datetime NOT NULL
+);
+CREATE INDEX "bboard_bb_published_58fdelb5" ON "bbоаrd_bb" ("published");
+СОММIТ;
+
+# выполнение всех миграций всех приложения проекта.
+# обязательно для первой миграции, т.к. django содержит свои миграции.
+manage.py migrate
+
+# 7. Вход в консоль.
+python manage.py shell
+# создадим первое объявление - первую запись модели Bb.
+>>>
+from bboard.models import Bb
+b1 = Bb(title='Дача', content='Общество "Двухэтажники". ' + \
+'Два этажа, кирпич, свет, газ, канализация', price=500000)
+b1.save()
+b1.pk  # 1
+# pk - храните значение ключевого поля текущей записи.
+b1.title
+b1.price
+b1.published  # datetime.datetime
+b1.id
+
+# можно создавать и так.
+>>>
+b2 = Bb()
+b2.title = 'Автомобиль'
+b2.content = '"Жигули"'
+b2.save()
+b2.pk  # 2
+b2.content = '"Жигули", 1980 года, ржавая, некрашеная, сильно битая'
+b2.save()
+
+# добавим третье объявление
+>>>
+Bb.objects.create(title='Дом', content='Трехэтажный, кирпич', price=50000000)
+# метод creaete() сразу же сохраняет в базу данных
+
+>>>
+for b in Bb.objects.all():
+	print(b.pk, ': ', b.title)
+1: Дача
+2: Автомобиль
+3: Дом
+
+# order_by() - сортировка по значению поля
+>>>
+for b in Bb.objects.order_by('title'):
+	print(b.pk, ': ', b.title)
+2: Автомобиль
+1: Дача
+3: Дом
+
+# filter() - фильтрация записей по заданным критериям
+>>>
+for b in Bb.objects.filter(title='Дом'):
+	print(b.pk, ': ', b.title)
+3: Дом
+
+# get()
+>>>
+b = Bb.objects.get(pk=2)
+b.title  # 'Автомобиль'
+b.delete()
+
+# выйти из консоли - exit() или quit().
+
+# bboard.views.py
+...
+from .models import Bb
+
+def index(request):
+	s = 'Список объявлений\r\n\r\n\r\n'
+	for bb in Bb.objects.order_by('-published'):
+		s += bb.title + '\r\n' + bb.content + '\r\n\r\n'
+	return HttpResponse(s, content_type='text/plain; charset=utf-8')
+
+# \r\n - возврат каретки и перенос строки
+# order_by('-published') - по убыванию
+# content_type - именованный параметр, указываем тип отправляемых данных - обычный текст и кодировку UTF-8.
+
+# 8. Шаблоны
+# в директиве приложения создаем templates/bboard/index.html
+html
+head
+/head
+body
+	{% for bb in bbs %}
+	div
+		h2{{ bb.title }}/h2
+		p{{ bb.content }}/p
+		p{{ bb.published|date:"d.m.Y H:i:s" }}/p
+	/div
+	{% endfor %}
+/body
+/html
+
+# 9. Рендеринг шаблонов. Сокращения
+
+# рендеринг низкоуровневым инструментом (сложный подход)
+# bboard.views
+...
+from django.template import loader
+from .models import Bb
+
+def index(request):
+	template = loader.get_template('bboard/index.html')
+	bbs = Bb.objects.order_by('-published')
+	context = {'bbs': bbs}
+	return HttpResponse(template.render(context, request))
+
+# средство более высокого уровня - функции-сокращения (shortcuts)
+# bboard.view
+...
+from django.shortcuts import render
+from .models import Bb
+
+def index(request):
+	bbs = Bb.objects.order_by('-published')
+	return render(request, 'bboard/index.html', {'bbs': bbs})
+
+# 10. Админ панель.
+django.contrib.auth
+django.contrib.admin
+
+# создать супер пользователя
+manage.py createsuperuser
+http://localhost:8000/admin/
+
+# поменять язык на русский в settings.py
+LANGUAGE_CODE = 'en-us'  # default
+LANUGAGE_CODE = 'ru-ru'
+
+# регистрация модели Bb на административном сайте
+# admin.py
+from .models import Bb
+admin.site.register(Bb)
+
+# 11. Параметры полей и моделей.
+# bboard.models.py
+class Bb(models.Model):
+	title = ...(verbose_name='Товар')
+	content = ...(verbose_name='Описание')
+	price = ...(verbose_name='Цена')
+	published = ...(verbose_name='Опубликовано')
+	
+	class Meta:
+		verbose_name_plural = 'Объявления'
+		verbose_name = 'Объявление'
+		ordering = ['-published']
+		
+# verbose_name_plural - название модели в множественном числе
+# verbose_name - название модели в единственном числе
+# ordering - последовательность полей, по которым
+по умолчанию будет выполняться сортировка записей
+
+# bboard.view
+def index(request):
+	bbs = Bb.objects.all()
+	...
+
+# 12. Редактор модели.
+# Объявить класс-редактор, bboard.admin
+from django.contrib import admin
+from .models import Bb
+
+class BbAdmin(admin.ModelAdmin):
+	list_display = ('title', 'content', 'price', 'published')
+	list_display_links = ('title', 'content')
+	search_fields = ('title', 'content')
+
+admin.site.register(Bb, BbAdmin)
+
+# list_display - последовательность имен полей,
+которые должны выводиться в списке записей;
+# list_display_links - последовательность имен полей, которые должны быть
+преобразованы в гиперссылки, ведущие на страницу правки записи
+# search_fields - последовательность имен полей, по которым должна выполняться фильтрация
+
+# 13. Связь между моделями.
+# bboard.models
+
+class Rubric(models.Model):
+	name = models.CharField(max_length=20, db_index=True, verbose_name='Название')
+	
+	class Meta:
+		verbose_name_plural = 'Рубрики'
+		verbose_name = 'Рубрика'
+		ordering = ['name']
+
+class Bb(models.Model):
+	...
+	rubric = models.ForeignKey(
+		'Rubric', null=True, on_delete=models.PROTECT, verbose_name='Рубрика'
+		)
+	
+	class Meta:
+		...
+# Класс ForeignKey - поле внешнего ключа.
+# on_delete=models.PROTECT - запрещает удалить записи вторичной модели (Bb),
+в случае удаления записи первичной модели (Rubric).
+
+# manage.py makemigrations bboard
+# manage.py migrate
+
+# bboard.admin
+from .models import Rubric
+admin.site.register(Rubric)
+
+# метод __str__() для Rubric - строковое представление
+# bboard.models
+class Rubric(models.Model):
+	...
+	def __str__(self):
+		return self.name
+	...
+
+# bboard.admin
+class BbAdmin(admin.ModelAdmin):
+	list_display = (..., 'rubric')
+	...
+
+
+# 14. URL-параметры и параметризованные запросы.
+# bboard.urls.py
+from .views import index, by_rubric
+
+urlpatterns = [
+	path('<int:rubric_id>/', by_rubric),
+	path('', index),
+]
+#<> угловые скобки - описание URL-параметра
+# int - целочисленный тип
+# by_rubric() - контролер функция из .views
+# Маршруты содержащие URL-параметры, носят название параметризованных.
+
+# bboard.views.py
+from .models import Rubric
+
+def by_rubric(request, rubric_id):
+	bbs = Bb.objects.filter(rubric=rubric_id)
+	rubrics = Rubric.objects.all()
+	current_rubric = Rubric.objects.get(pk=rubric_id)
+	context = {'bbs': bbs, 'rubric': rubrics, 'current_rubric': current_rubric}
+	return render(request, 'bboard/by_rubric.html', context)
+# rubric_id - этому параметру будет присвоено значение URL-параметра,
+выбранного из интернет адреса
+
+#bboard/templates/bboard/by_rubric.html
+body
+	h1 Объявления /h1
+	h2 Рубрика: {{ current_rubric.name }} /h2
+	div
+		<a href="/bboard/">Главная</a>
+		{% for rubric in rubrics %}
+		<a href="/bboard/{{ rubric.pk }}/">{{ rubric.name }}</a>
+		{% endfor %}
+	/div
+	{% for bb in bbs %}
+	div
+		h2 {{ bb.title }} /h2
+		p {{ bb.content }} /p
+		p {{ bb.published|date:"d.m.Y H:i:s" }} /p
+	/div
+	{% endfor %}
+/body
+
+# исправим контроллер index() и index.html
+# bboard.views.index
+def index(request):
+	bbs = Bb.objects.all()
+	rubrics = Rubric.objects.all()
+	context = {'bbs': bbs, 'rubrics': rubrics}
+	return render(request, 'bboard/index.html', context)
+
+# index.html
+body
+	h1 Объявления /h1
+	div
+		<a href="/bboard/">Главная</a>
+		{% for rubric in rubrics %}
+		<a href="/bboard/{{ rubric.pk }}/">{{ rubric.name }}</a>
+		{% endfor %}
+	/div
+	{% for bb in bbs %}
+	div
+		h2 {{ bb.title }} /h2
+		p {{ bb.content }} /p
+		p<a href="/bboard/{{ bb.rubric.pk }}/">{{ bb.rubric.name }}</a>/p
+		p {{ bb.published|date:"d.m.Y H:i:s" }} /p
+	/div
+	{% endfor %}
+/body
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,17 @@
+﻿# bboard/urls.py
+urlpatterns = [
+	path('<int:rubric_id>/', by_rubric, name='by_rubric'),
+	path('', index, name='index')
+]
+
+# bboard/index.html
+# заменяем
+<a href="/bboard/{{ rubric.pk }}/"> ->
+-> <a href="{% url 'by_rubric' rubric.pk %}">
+# имя маршрута указывается первым параметром тега url, а значение URL-параметра, которое нужно вставить в результирующий интернет-адрес, - вторым.
+
+<a href="/bboard/"> ->
+-> <a href="{% url 'index' %}">
+# маршрут index не является параметризованным.
+
+# аналогично вносим правки во все остальные фрагменты кода

@@ -1,0 +1,42 @@
+﻿[Unit]
+Description=Messages IS
+After=network.target
+
+[Service]
+User=admdcs
+Group=admdcs
+WorkingDirectory=/home/admdcs/messages/msgs_is
+ExecStart=/home/admdcs/messages/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/home/admdcs/messages/msgs_is.sock myapp.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+
+server {
+    listen 80;
+    server_name 192.168.56.10;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location /static/ {
+        root /home/admdcs/messages/msgs_is;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/home/admdcs/messages/msgs_is.sock;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+

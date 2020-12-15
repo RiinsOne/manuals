@@ -1,0 +1,544 @@
+﻿Ubuntu 18.04 (LTS)
+
+- Rent a VPS.
+- Create non-root user account (sudo).
+- Give a user a password.
+- Set hostname.
+
+1. Создать пользователя.
+useradd -m -s /bin/bash -G sudo user1
+# создаст пользователя user1, добавит его в группу sudo,
+# "-s /bin/bash" - сделать bash оболочной по умолчанию,
+# "-m" создаст home директорию для этого пользователя.
+
+2. Добавить пароль пользователю.
+passwd user1
+
+# проверить пользователя.
+cat /etc/passwd
+# появится информация о домашней директории и оболочки всех пользователей.
+
+# проверить группу юзера
+groups user1
+
+# перелогиниться за пользователя.
+su user1
+
+3. Поменять имя хоста.
+sudo hostnamectl set-hostname user1-systems
+
+# перезагрузить shell
+bash
+
+# классический способ поменять имя хоста
+sudo vim /etc/hostname
+
+__________________________________________________________________________
+
+- Setup public key auth
+- Disable password based auth
+
+1. Создать private key в указанный путь и файл.
+ssh-keygen -f ~/.ssh/user1k
+ls -lsa ~/.ssh/user1k
+ls -lsa ~/.ssh/user1k.pub  # public key
+
+# копировать public key на удаленную машину
+ip addr  # на хосте
+ssh-copy-id -i /home/local_user/.ssh/user1k user1@<ip-address-of-host>
+
+# подключиться на удаленную машину
+ssh user1@<ip-address-of-host> -i ~/.ssh/johnk
+
+# изменение конфиг файла на локальной машине
+vim ~/.ssh/config
+	---
+	Host us1
+		Hostname <ip-address-of-host>
+		User user1
+		IdentityFile /home/local_user/.ssh/user1k
+	---
+
+# теперь можно подключаться к хосту через ssh и имя подключения к данной машине,
+# заданное в конфиге ~/.ssh/config
+ssh us1
+
+2. Отключить индентификацию по паролю.
+# на хосте
+sudo vim /etc/ssh/sshd_config
+	...
+	PermitRootLogin no
+	PubkeyAuthentication yes
+	PasswordAuthentication no
+	...
+
+restart sshd
+
+# verbose output
+# на локальной машине
+ssh -v us1
+
+__________________________________________________________________________
+
+ssh us1
+
+sudo apt-get install nginx
+sudo systemctl status nginx
+
+cd /etc/nginx/sites-available/
+	ls -l  # default
+	sudo rm default
+	sudo touch demo.somesite.net
+	ls -l  # demo.somesite.net
+	
+# in /etc/nginx/sites-available/
+vim demo.somesite.net
+	# server - virtual server in nginx.
+	# server_name - можно указать и ip адресс.
+	~~~
+	server {
+		listen 80;
+		server_name demo.somesite.net;
+		
+		location / {
+			root /opt/demo/;
+		}
+	}
+	~~~
+
+ls -l /opt/demo/  # hello.html
+cat /opt/demo/hello.html  # Hello, Nginx!
+
+# нужно создать символьный линк в директории sites-enabled
+cd ../sites-enabled/
+sudo ln -s /etc/nginx/sites-available/demo.somesite.net
+# если не указана конкретная директория, то линк создаться в текущей папке,
+# в нашем случае /etc/nginx/sites-enabled/
+ls -l  # symbol link
+sudo systemctl restart nginx
+sudo systemctl status nginx
+
+# проверить nginx
+http:<ip-address-of-host>/hello.html
+
+# updated nginx config - demo.somesite.net
+	~~~
+	server {
+		listen 80;
+		server_name <ip-address-of-host>;
+		
+		location /static/ {
+			alias /opt/demo/static/;
+		}
+		
+		location / {
+			proxy_pass http://localhost:8000;
+		}
+	}
+	~~~
+
+# cd /opt
+sudo tree
+.
+	-demo
+		-static
+			-css
+				-index.css
+			-js
+				-index.js
+4 directories, 2 files
+
+__________________________________________________________________________
+
+- Ansible
+
+# в папке демо создаем виртуальное окружение
+# /demo
+python -m venv .venv
+source .venv/bin/activate
+pip install ansible
+ansible --version
+
+# (.venv) ansible
+ls  # [deploy] deploy-demo.yml hosts
+cat ~/.ssh/config | head -n 13
+	...
+	Host us1
+	...
+
+# в файле hosts просто прописываем us1, система будет понимать о каком хосте идет речь,
+# т.к. в конфиге ssh этот хост указан
+
+# deploy-demo.yml - playbook в yml формате
+ansible-playbook deploy-demo.yml -i hosts -K
+
+# deploy-demo.yml
+- hosts: us1
+  gather_facts: no
+  become: True
+  roles:
+    - role: 'deploy/django-demo-app/nginx'
+	  vars:
+	    gunicorn_port: 9001
+
+# hosts -> где запустить команду
+# gather_facts -> 
+# become: True и команда с ключом -K -> что-то на подобие запуска команд с повышенными правами на хосте
+# roles -> в ролях указываются задания
+tree
+	deploy
+		django-demo-app
+			nginx
+				tasks
+					main.yml
+				templates
+					demo.somesite.net
+					
+# main.yml в 'deploy/django-demo-app/nginx'
+---
+- name: Install nginx
+  apt:
+    name: nginx
+	state: present
+
+- name: Deactivate the default nginx from sites-available
+  file:
+    path: /etc/nginx/sites-available/default
+	state: absent
+
+- name: Copy demo.somesite.net
+  template:
+    src: demo.somesite.net
+	dest: /etc/nginx/sites-available/
+
+- name: Activate the demo.somesite.net site
+  file:
+    src: /etc/nginx/sites-available/demo.somesite.net
+	dest: /etc/nginx/sites-enabled/demo.somesite.net
+	state: link
+
+- name: Restart nginx.service
+  systemd:
+    state: restarted
+	name: nginx
+
+# demo.somesite.net в 'deploy/django-demo-app/nginx/templates'
+server {
+	listen 80;
+	server_name demo.somesite.net;
+	
+	location /staic/ {
+		alias /opt/demo/static/;
+	}
+	
+	location / {
+		proxy_pass http://localhost:{{gunicorn_port}};
+	}
+}
+# переменная {{gunicorn_port}} определена в deploy-demo.yml плейбуке
+
+# запустить команду ansible, на локальной машине
+ansible-playbook deploy-demo.yml -i hosts -K
+
+__________________________________________________________________________
+
+DB
+
+# ansible > tree
+----deploy
+	----common
+	----django-demo-app
+		----db
+			----tasks
+				----main.yml
+		----nginx
+			----tasks
+				----main.yml
+			----templates
+				----demo.somesite.net
+	----deploy-demo.yml
+	----hosts
+
+# установка последней версии postgresql через инструкцию на сайте
+# надо будет добавить новый репозиторий и ключ
+
+# db/tasks/main.yml
+---
+- name: Add Postgres repo for Ubuntu 18.04
+  apt_repository:  # add apt-repository <repo>
+    repo: deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main
+	state: present
+	update_cache: no
+
+- name: Add official PG publick key key
+  apt-key:  # wget --quiet -0 - <repo> | sudo apt-key add -
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+	state: present
+
+- name: Install Postgresql 12 Server
+  apt:  # apt-get update && apt-get install ...
+    name:
+	  - postgresql-12
+	  - postgresql
+	  - postgresql-contrib
+	  - libpg-dev
+	state: present
+	update_cache: yes  # apt-get update before
+
+# обновить deploy-demo.yml
+# deploy-demo.yml
+- hosts: us1
+  gather_facts: no
+  become: True
+  roles:
+    - role: 'deploy/django-demo-app/nginx'
+	  vars:
+	    gunicorn_port: 9001
+	- role: 'deploy/django-demo-app/db'
+
+# run ansible playbook
+ansible-playbook deploy-demo.yml -i hosts -K
+
+# ssh us1
+psql --version  # проверить версию
+
+# проверить работает ли база данных
+sudo systemctl status postgresql@12-main.service  # active
+
+# создать пользователя postgresql
+sudo -u postgres createuser --interactive
+	name> user1
+	superuser> n
+	allow to create databases> n
+	allow to create more new roles> n
+
+# создадим базу данных пользователем/владельцем user1
+sudo -u postgres createdb -0 user1 database1
+
+# проверить списки базы данных
+sudo -u postgres psql -l
+
+# добавим больше данных в db/tasks/main.yml
+# db/tasks/main.yml
+---
+...
+- name: Create DB user
+  postgresql_user:
+    name: "{{db_user}}"
+	password: "{{db_pass}"
+  become_user: postgres
+
+- name: Create DB instance
+  postgresql_db:
+    name: "{{db_name}}"
+	owner: "{{db_user}}"
+  become_user: postgres
+
+# обновить deploy-demo.yml
+# deploy-demo.yml
+- hosts: us1
+  gather_facts: no
+  become: True
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  roles:
+    - role: 'deploy/django-demo-app/nginx'
+	  vars:
+	    gunicorn_port: 9001
+	- role: 'deploy/django-demo-app/db'
+	  vars:
+	    db_user: "user4"
+		db_name: "database4"
+		db_pass: "***"
+
+# cd demo/ansible
+# run ansible playbook
+ansible-playbook deploy-demo.yml -i hosts -K
+
+# ssh us1
+# проверить списки базы данных
+sudo -u postgres psql -l
+
+# можно изменить основной .yml файл
+# deploy-demo.yml
+- hosts: us1
+  gather_facts: no
+  become: True
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+	gunicorn_port: 9001
+	db_user: "user4"
+	db_name: "database4"
+	db_pass: "***"
+  roles:
+    - role: 'deploy/django-demo-app/nginx'
+	- role: 'deploy/django-demo-app/db'
+
+__________________________________________________________________________
+
+Gunicorn
+
+# на хосте
+cd /etc/systemd/system
+sudo touch lessons.service
+sudo vim lessons.service
+~~~
+[Unit]
+Description=Django Lessons
+
+[Service]
+Type=simple
+PIDFile=/home/user1/django-lessons-proj/gunicorn.pid
+User=user1
+Group=user1
+EnvironmentFile=/etc/lessons/gunicorn.env
+WorkingDirectory=/home/user1/django-lessons-proj/
+ExecStart=/home/user1/django-lessons-proj/venv/bin/gunicorn --config /etc/lessons/gunicorn.conf.py config.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+~~~	
+		
+#
+cd /etc/
+sudo mkdir lessons
+cd lessons/
+sudo touch gunicorn.conf.py
+sudo vim gunicorn.conf.py
+~~~
+workers = 2
+syslog = True
+bind = ['127.0.0.1:8000']
+umask = 0
+loglevel = "info"
+user = "user1"
+group = "user1"
+~~~
+
+#
+pwd  # /home/user1
+git clone ...
+ls  # django-lessons-proj
+cd django-lessons-proj
+cd config/settings
+touch production.py
+vim production.py
+
+~~~
+from .base import *
+
+
+DEBUG = False
+INTERNAL_IPS = ['127.0.0.1',]
+
+ALLOWED_HOSTS = ['*']  # доменное имя или ip адрес сервера
+
+SITE_ID = 1
+SECRET_KEY = os.environ['SECRET_KEY']
+MEDIA_ROOT = '/home/user1/media'
+STATIC_ROOT = '/home/user1/static'
+
+DATABASES = {
+	'default': {
+		'ENGINE': 'django.db.backends.postgresql',
+		'NAME': os.environ['DB_NAME'],
+		'USER': os.environ['DB_USER'],
+		'PASSWORD': os.environ['DB_PASS'],
+		'HOST': '127.0.0.1',
+		'PORT': '5432',
+	}
+}
+
+# pwd -> /home/user1/django-lessons-proj/
+python3 -m venv venv
+source /venv/bin/activate
+
+# inside venv
+pip3 install -r req.txt
+
+cd venv/bin/
+ls
+ls -lsa gunicorn
+
+# pwd -> django-lessons-proj/
+ls # есть файл env.sh
+vim env.sh  # секретные переменные
+~~~
+export DJANGO_SETTINGS_MODULE=config.settings.production
+export SECRET_KEY=
+export DB_NAME=
+export DB_USER=
+export DB_PASS=
+~~~
+
+# активировать/определить переменные в shell
+source ./env.sh
+
+# проверить
+env | grep -i django_settings
+-> DJANGO_SETTINGS_MODULE=config.settings.production
+
+# после можно делать миграцию
+source ./venv/bin/activate
+source env.sh
+./manage.py migrate
+
+#
+cd django-lessons-proj/
+cat config/settings/production.py | grep -i static_root
+STATIC_ROOT = '/home/user1/static'
+
+# in venv
+./manage.py collectstatic
+ls ~/static/
+
+# in venv
+sudo cp ~/django-lessons-proj/env.sh /etc/lessons/gunicorn.env
+cd /etc/lessons/
+sudo vim gunicorn.env
+# удалить export
+~~~
+DJANGO_SETTINGS_MODULE=config.settings.production
+SECRET_KEY=
+DB_NAME=
+DB_USER=
+DB_PASS=
+~~~
+
+# start gunicorn
+sudo systemctl start lessons.service
+sudo systemctl status lessons.service
+
+# исправим статику
+sudo /etc/nginx/sites-enabled/demo.somesite.net
+~~~
+server {
+	listen 80;
+	server_name demo.somesite.net;
+	
+	location /staic/ {
+		alias /home/user1/static/;
+	}
+	
+	location / {
+		proxy_pass http://localhost:8000;
+	}
+}
+~~~
+sudo systemctl restart lessons.service
+
+__________________________________________________________________________
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

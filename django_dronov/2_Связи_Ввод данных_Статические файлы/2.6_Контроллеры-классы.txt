@@ -1,0 +1,58 @@
+# Создадим контроллер-класс в bboard/views.py
+from django.views.generic.edit import CreateView
+from .forms import BbForm
+
+class BbCreateView(CreateView):
+    template_name = 'bboard/create.html'
+    form_class = BbForm
+    success_url = '/bboard/'
+
+    def get_context_date(self, **kwargs):
+        context = super().get_context_date(**kwargs)
+        context['rubrics'] = Rubric.objects.all()
+        return context
+
+# Создадим шаблон bboard/create.html
+html
+head
+    title Добавление объявления - Доска объявлений /title
+/head
+body
+    h1 Добавление объявления /h1
+    div
+        <a href="{% url 'index' %}">Главная</a>
+        {% for rubric in rubrics %}
+        <a href="{% url 'by_rubric' rubric.pk %}">{{ rubric.name }}</a>
+        {% endfor %}
+    /div
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Добавить">
+    </form>
+
+/body
+/html
+
+# bboard/urls.py
+...
+from .views import BbCreateView
+
+urlpatterns = [
+    path('add/', BbCreateView.as_view(), name='add'),
+    ...
+]
+
+# добавим в панель навигации всех страниц гиперссылку на добавление объявления
+<a href="{% url 'add' %}">Добавить</a>
+
+# использование success_url в контроллере-класса считается дурным тоном,
+надо сгенерировать его путем обратного разрешения
+# bboard/views.py
+from django.urls import reverse_lazy
+
+class BbCreateView(CreateView):
+    ...
+    success_url = reverse_lazy('index')
+    ...
+# функция reverse_lazy() принимает имя маршрута и значения всех входящих в маршрут URL-параметров. Результат станет готовый интернет-адрес.
