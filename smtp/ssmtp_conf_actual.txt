@@ -9,9 +9,9 @@ root=orkhangasanov@gmail.com
 # MX records are consulted. Commonly mailhosts are named mail.domain.com
 mailhub=smtp.gmail.com:465
 FromLineOverride=YES
-AuthUser=orkhangasanov@gmail.com
-AuthPass=!DevilDeniz!
-# AuthPass=BBBlackq&BLA(CK!
+AuthUser=email@gmail.com
+AuthPass=email_pass
+# AuthPass=email_pass
 UseTLS=YES
 # Where will the mail seem to come from?
 #rewriteDomain=
