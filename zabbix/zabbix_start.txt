@@ -1,0 +1,9 @@
+# create user
+Administration > Create user
+	# on second bookmark Media (notification method)
+	> add
+
+# user group, choose zabbix-admin, get all permissions, after add and update
+
+# create hosts
+Configuration > Hosts > Create new host

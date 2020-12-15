@@ -1,0 +1,243 @@
+# disable selinux
+vi /etc/selinux/config
+# This file controls the state of SELinux on the system.
+# SELINUX= can take one of these three values:
+#       enforcing - SELinux security policy is enforced.
+#       permissive - SELinux prints warnings instead of enforcing.
+#       disabled - No SELinux policy is loaded.
+SELINUX=disabled
+# SELINUXTYPE= can take one of these two values:
+#       targeted - Targeted processes are protected,
+#       mls - Multi Level Security protection.
+SELINUXTYPE=targeted
+
+______________________________________________
+# ENABLE INTERNET CONNECTION
+
+# show connection status
+nmcli d
+
+# enable connection
+nmtui
+
+# restart network service
+service network restart
+
+# reboot
+reboot now
+______________________________________________
+# ADD USER TO SUDOERS
+
+# add a user to a wheel group
+usermod -aG wheel black
+
+# check if root privileges prompt
+sudo ls -la /root
+w
+______________________________________________
+#UPDATING AND INSTALLING NEEDED PACKAGES
+
+# install epel
+yum install epel-release
+
+# update packages
+yum update
+
+# install net-tools
+sudo yum install net-tools
+
+#
+yum install wget
+
+# add host-only adapter in virtualbox
+# check ip in ifconfig and connect via ssh on local host
+
+______________________________________________
+
+# with root user install repo package
+rpm -ivh https://repo.zabbix.com/zabbix/4.2/rhel/7/x86_64/zabbix-release-4.2-1.el7.noarch.rpm
+
+# install yum-config-manager
+yum install yum-utils.noarch
+
+# activate repo with additional rmp packages
+yum-config-manager --enable rhel-7-server-optional-rpms
+
+# install zabbix server, web-interface, mysql
+yum install zabbix-server-mysql zabbix-web-mysql
+
+
+# INSTALL ALL SERVICES AND CREATE DATABASE
+
+# install all services
+yum -y install mysql mysql-server
+yum -y install mariadb-server
+yum -y install httpd httpd-devel
+yum -y install php php-devel php-bcmath  php-pear php-gd php-mbstring php-mysql php-xml
+
+
+# start all services
+service httpd start
+service httpd enable
+service mariadb start
+
+
+# setup mysql/mariadb
+mysql_secure_installation
+
+Enter current password for root (enter for none):
+OK, successfully used password, moving on...
+
+Setting the root password ensures that nobody can log into the MariaDB
+root user without the proper authorisation.
+
+Set root password? [Y/n] y
+New password:
+Re-enter new password:
+Password updated successfully!
+Reloading privilege tables..
+ ... Success!
+
+
+By default, a MariaDB installation has an anonymous user, allowing anyone
+to log into MariaDB without having to have a user account created for
+them.  This is intended only for testing, and to make the installation
+go a bit smoother.  You should remove them before moving into a
+production environment.
+
+Remove anonymous users? [Y/n] y
+ ... Success!
+
+Normally, root should only be allowed to connect from 'localhost'.  This
+ensures that someone cannot guess at the root password from the network.
+
+Disallow root login remotely? [Y/n] n
+ ... skipping.
+
+By default, MariaDB comes with a database named 'test' that anyone can
+access.  This is also intended only for testing, and should be removed
+before moving into a production environment.
+
+Remove test database and access to it? [Y/n] y
+ - Dropping test database...
+ ... Success!
+ - Removing privileges on test database...
+ ... Success!
+
+Reloading the privilege tables will ensure that all changes made so far
+will take effect immediately.
+
+Reload privilege tables now? [Y/n] y
+ ... Success!
+
+Cleaning up...
+
+All done!  If you've completed all of the above steps, your MariaDB
+installation should now be secure.
+
+Thanks for using MariaDB!
+
+
+
+
+# enter database
+mysql -uroot -p<пароль>
+	> create database zabbix character set utf8 collate utf8_bin;
+	> grant all privileges on zabbix.* to zabbix@localhost identified by '<пароль>';
+	> quit;
+
+
+# setup zabbix apache configuration, php_value date.timezone Asia/Kolkata
+vi /etc/httpd/conf.d/zabbix.conf
+service httpd restart
+
+# import data, will ask password from created database
+zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -uzabbix -p zabbix
+
+# setup zabbix_server.conf
+# vi /etc/zabbix/zabbix_server.conf
+DBHost=localhost
+DBName=zabbix
+DBUser=zabbix
+DBPassword=<пароль>
+
+# start and enable zabbix-server
+systemctl start zabbix-server
+systemctl enable zabbix-server
+
+# download from direct link
+wget https://sourceforge.net/projects/zabbix/files/ZABBIX%20Latest%20Stable/4.2.6/zabbix-4.2.6.tar.gz
+
+# dearchivate
+tar -zxvf zabbix-4.2.6.tar.gz
+
+# 
+cd /home/black/zabbix-4.2.6/frontends/php
+
+# 
+cp -a . /var/www/html/zabbix
+
+______________________________________________
+# prefer firewalld
+firewall-cmd --add-service={http,https} --permanent
+firewall-cmd --add-port={10051/tcp,10050/tcp, 80/tcp, 443/tcp} --permanent
+firewall-cmd --reload
+firewall-cmd --list-all
+systemctl restart firewalld
+
+______________________________________________
+# check iptables rules -> prefer firewalld rules
+iptables -nL -v
+iptables -S
+
+# install iptables services
+yum -y install iptables-services
+
+# make rules for 80, 443, 10051
+iptables -I INPUT -p tcp --dport 80 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -I OUTPUT -p tcp --sport 80 -m state --state ESTABLISHED -j ACCEPT
+
+iptables -I INPUT -p tcp --dport 443 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -I OUTPUT -p tcp --sport 443 -m state --state ESTABLISHED -j ACCEPT
+
+iptables -I INPUT -p tcp -m state --state NEW,ESTABLISHED -m tcp --dport 10051 -j ACCEPT
+iptables -I OUTPUT -p tcp --sport 10051 -m state --state ESTABLISHED -j ACCEPT
+
+# save rules
+service iptables save
+service iptables restart
+______________________________________________
+
+# open in web http://ip_a/zabbix and follow steps
+
+#welcome
+#check of pre-requisiter -> be sure that everything is green and fit the requirements
+#configure db connection
+	database type: mysql
+	database host: localhost
+	database port: 0 (default)
+	database name: zabbix
+	user: zabbix
+	password: black
+
+	mysql -uroot -p
+	> show grants for 'zabbix'@'localhost';
+# pre-installation summary
+	by default
+
+# login: Admin, pass: zabbix
+
+______________________________________________
+
+# install agent
+yum install zabbix-agent
+service zabbix-agent start
+systemctl enable zabbix-agent
+
+
+
+
+
+
+
+
