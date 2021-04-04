@@ -1,0 +1,32 @@
+#
+cat /etc/passwd
+
+# cat может объединять вывод нескольих файлов
+cat /etc/passwd /etc/group
+
+# вывод текста с нумерацией
+cat -n /etc/passwd
+
+# tac - вывод текста с конца
+tac
+
+# less - программа читалка
+less /etc/passwd
+
+# читать все, что ниже 35 строки
+tail -n +35 /etc/passwd
+
+# в реальном времени
+tail -f
+
+# греп с нумерацией
+grep -n bash /etc/passwd
+
+# искать совпадения рекурсивно во всех файлах и директориях в etc
+grep -r bash /etc/
+
+#
+grep -rl bash /etc/
+
+# искать все строки, где не содержится слово bash, реверсировать поиск с помощью ключа v
+grep -v bash /etc/passwd

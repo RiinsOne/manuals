@@ -1,0 +1,19 @@
+# для мув не нужна рекурсия для перемещения одной папки в другую
+mv dir2 dir
+
+# поменять имя - это создать жесткую ссылку с новым именем и удалить со старым
+mv file newfilename
+mv dir newdirname
+
+#
+rm -v newfilename
+
+# создать жесткую ссылку
+ln -v file samefile
+
+# soft или symbolic link
+ln -s file softlink
+ls -l
+
+# soft link folder
+ln -s /usr/share/applications/ ~/

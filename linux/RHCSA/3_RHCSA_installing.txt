@@ -1,0 +1,51 @@
+## centos
+
+# keyboard
+выбираем нужные раскладки и горячие клавиши для переключений
+
+# network
+включаем сетевой интерфейс и прописываем имя хоста
+
+# time and date
+выбираем правильную временную зону
+
+# software selection
+выбираем нужные программы: workstation; gnome, internet applications, office suite, remote desktop clients, graphical tools, system tools
+
+# installation destination
+done - для автоматической разметки диска
+
+# begin installation
+
+# задаем рут права
+# создаем пользователя
+# после ребута принимаем лицензионное соглашение
+
+# после загрузки проходим getting started и устанавливаем обновления
+# в терминале
+sudo dnf update -y
+
+# установка доп. утилит для работы с гипервизером
+sudo dnf install kernel-headers kernel-devel elfutils-libelf-devel gcc make perl -y
+
+# после complete > reboot
+
+# devices > insert guest additions CD image
+# run - для установки гостевых утилит
+# перезагрузка
+
+# snapshots > take > указываем название и описание
+
+
+
+
+
+
+
+
+
+
+
+
+
+

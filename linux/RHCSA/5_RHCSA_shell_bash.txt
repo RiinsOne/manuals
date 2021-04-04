@@ -1,0 +1,14 @@
+#
+sh  # командный язык оболочки
+exit
+
+# Bourne Again SHell
+bash  # bash позволяет дополнять команды
+
+#
+ls -i  # содержимое директории и иноды
+
+#
+man -k password  # все совпадения по ключевому слову в man
+man 1 passwd
+man 5 passwd

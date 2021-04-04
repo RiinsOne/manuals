@@ -1,0 +1,22 @@
+# uuid раздела
+sudo blkid /dev/sda1
+# после поменять UUID в /etc/fstab
+
+# установка файловой системы vfat на загрузочный раздел
+mkfs.vfat /dev/sda1
+
+# просмотр ветки дисков с типом файловой системы
+lsblk -f
+
+# установка grub
+mkdir /mnt/efi
+mount /dev/sda1 /mnt/efi 
+grub-install --efi-directory=/mnt/efi
+
+#############################
+cat /proc/mdstat | Просмотр состояния RAID
+fdisk -l | Простомотр дисков и разделов
+
+mdadm --add /dev/md1 /dev/sda2  | Добавление разделов (partition) в RAID
+sfdisk -d /dev/sda | sfdisk /dev/sdb   | Клонирование разделов с диска sda на sdb
+
